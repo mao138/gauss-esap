@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eliminación de Gauss Interactiva</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --accent: #111827;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    h1, h2, h3 { margin-top: 0; }
+    p, .small { color: var(--muted); }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    button, select, input {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      margin-top: 6px;
+    }
+    button { cursor: pointer; }
+    button:hover { background: #f3f4f6; }
+    input[type="text"] { width: 110px; }
+    .ops-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    .op-block {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafafa;
+    }
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .status {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      font-weight: bold;
+    }
+    .status.success {
+      color: #166534;
+      background: #ecfdf5;
+      border-color: #86efac;
+      animation: blinkGreen 1s step-start infinite;
+    }
+    @keyframes blinkGreen {
+      50% {
+        opacity: 0.45;
+      }
+    }
+    .history {
+      max-height: 420px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .history-step {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fcfcfd;
+    }
+    .history-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .error {
+      color: #b91c1c;
+      font-weight: bold;
+      min-height: 20px;
+      margin-top: 8px;
+    }
+    .matrix-wrap {
+      display: inline-flex;
+      align-items: stretch;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .matrix-bracket {
+      width: 16px;
+      min-width: 16px;
+      position: relative;
+      align-self: stretch;
+    }
+    .matrix-bracket.left {
+      border-left: 3px solid var(--accent);
+      border-top: 3px solid var(--accent);
+      border-bottom: 3px solid var(--accent);
+      border-top-left-radius: 14px;
+      border-bottom-left-radius: 14px;
+    }
+    .matrix-bracket.right {
+      border-right: 3px solid var(--accent);
+      border-top: 3px solid var(--accent);
+      border-bottom: 3px solid var(--accent);
+      border-top-right-radius: 14px;
+      border-bottom-right-radius: 14px;
+    }
+    .matrix-grid {
+      display: grid;
+      gap: 12px 18px;
+      align-items: center;
+      justify-items: center;
+      padding: 8px 12px 8px 8px;
+      position: relative;
+    }
+    .matrix-cell {
+      min-width: 34px;
+      text-align: center;
+      font-size: 22px;
+      line-height: 1.1;
+      padding: 2px 4px;
+      position: relative;
+      z-index: 1;
+    }
+    .matrix-cell.before-sep {
+      padding-right: 12px;
+    }
+    .matrix-cell.after-sep {
+      padding-left: 12px;
+      min-width: 36px;
+    }
+    .pivot {
+      color: #b91c1c;
+      border: 2px solid #b91c1c;
+      border-radius: 999px;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      background: #fff;
+      padding: 0 8px;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .wide-value {
+      min-width: 44px;
+      display: inline-flex;
+      justify-content: center;
+    }
+    .very-wide-value {
+      min-width: 58px;
+      display: inline-flex;
+      justify-content: center;
+    }
+    .matrix-separator {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      border-left: 3px solid var(--accent);
+      pointer-events: none;
+      z-index: 0;
+      transform: translateX(-50%);
+    }
+    @media (max-width: 900px) {
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" style="margin-bottom:20px;">
+      <div class="inline" style="justify-content:space-between; align-items:center; gap:16px;">
+        <div>
+          <div style="font-size:13px; color: var(--muted); font-weight:bold; letter-spacing:0.4px;">ESCUELA SUPERIOR DE ADMINISTRACIÓN PÚBLICA</div>
+          <div style="font-size:13px; color: var(--muted); font-weight:bold; letter-spacing:0.4px; margin-top:2px;">Territorial Nariño Alto Putumayo</div>
+          <div style="font-size:13px; color: var(--muted); margin-top:6px;">Elaborado por Hamilton Mauricio Ruiz, docente de planta</div>
+          <div style="font-size:28px; font-weight:bold; margin-top:4px;">Eliminación de Gauss Interactiva</div>
+          <div style="margin-top:8px; color: var(--muted);">
+            Área de Matemáticas · Programa de Administración Pública
+          </div>
+        </div>
+        <img src="data:image/png;base64,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" alt="Símbolo ESAP" style="width:88px; height:88px; object-fit:contain; flex-shrink:0;" />
+      </div>
+      <p style="margin-top:16px; margin-bottom:0;">
+        Recurso didáctico para apoyar el aprendizaje del método de eliminación de Gauss en la resolución de sistemas de ecuaciones lineales mediante operaciones elementales por filas.
+      </p>
+      <div style="margin-top:14px; font-size:14px; color: var(--muted);">
+        Visitas al sitio: <strong><span id="visit-counter">Cargando...</span></strong>
+      </div>
+    </div>
+
+    <h1>Eliminación de Gauss Interactiva</h1>
+    <p>
+      Ingresa una matriz aumentada escribiendo <strong>cada fila en una línea diferente</strong> y usando <strong>comas para separar las columnas</strong>.
+      Para números decimales usa <strong>punto decimal</strong>, por ejemplo <code>1.5</code> o <code>-0.25</code>.
+      También puedes usar fracciones como <code>1/2</code>, <code>-3/4</code> o <code>5/2</code>.
+    </p>
+
+    <div class="row">
+      <div class="card">
+        <h2>Matriz inicial</h2>
+        <textarea id="matrixInput"></textarea>
+        <div class="small">
+          Ejemplo:<br>
+          <code>1,3,1</code><br>
+          <code>2,-1,9</code>
+        </div>
+        <div class="inline">
+          <button onclick="loadMatrix()">Cargar matriz</button>
+          <button onclick="resetAll()">Reiniciar</button>
+          <button onclick="undo()">Deshacer</button>
+        </div>
+        <div class="error" id="errorBox"></div>
+
+        <h2 style="margin-top:16px; margin-bottom:8px;">Matriz actual</h2>
+        <div id="matrixContainer"></div>
+        <div class="status" id="statusBox">Estado: sin cargar</div>
+      </div>
+
+      <div class="card">
+        <h2>Operaciones elementales por filas</h2>
+        <div class="ops-grid">
+          <div class="op-block">
+            <h3>1. Intercambiar filas</h3>
+            <div class="inline">
+              <button type="button">R</button>
+              <select id="swapR1"></select>
+              <span>↔</span>
+              <button type="button">R</button>
+              <select id="swapR2"></select>
+              <button onclick="swapRows()">Aplicar</button>
+            </div>
+          </div>
+
+          <div class="op-block">
+            <h3>2. Multiplicar una fila por un escalar</h3>
+            <div class="inline">
+              <button type="button">R</button>
+              <select id="scaleRow"></select>
+              <span>←</span>
+              <input type="text" id="scaleFactor" value="" />
+              <span>·</span>
+              <button type="button">R</button>
+              <span id="scaleRowText">1</span>
+              <button onclick="scaleRowOp()">Aplicar</button>
+            </div>
+            <div class="small">Puedes usar enteros, decimales con punto o fracciones, por ejemplo: <code>2</code>, <code>-1.5</code>, <code>1/2</code>.</div>
+          </div>
+
+          <div class="op-block">
+            <h3>3. Reemplazar una fila por la suma de un múltiplo de otra</h3>
+            <div class="inline">
+              <button type="button">R</button>
+              <select id="addTarget"></select>
+              <span>←</span>
+              <button type="button">R</button>
+              <span id="addTargetText">1</span>
+              <span>+</span>
+              <input type="text" id="addFactor" value="" />
+              <span>·</span>
+              <button type="button">R</button>
+              <select id="addSource"></select>
+              <button onclick="addRows()">Aplicar</button>
+            </div>
+            <div class="small">Ejemplo: <code>R2 ← R2 + (1/2)·R1</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>Pasos realizados</h2>
+        <div class="history" id="historyBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let matrix = [];
+    let states = [];
+    let historyLog = [];
+
+    function cloneMatrix(m) {
+      return m.map(row => row.slice());
+    }
+
+    function approxEqual(a, b, eps = 1e-10) {
+      return Math.abs(a - b) < eps;
+    }
+
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b) {
+        const t = b;
+        b = a % b;
+        a = t;
+      }
+      return a || 1;
+    }
+
+    function cleanNumber(x) {
+      if (approxEqual(x, 0)) return 0;
+      return Math.round(x * 1000000000) / 1000000000;
+    }
+
+    function parseFractionParts(x) {
+      x = cleanNumber(x);
+      if (Number.isInteger(x)) return { num: x, den: 1 };
+      const sign = x < 0 ? -1 : 1;
+      const absX = Math.abs(x);
+      const maxDen = 144;
+      let bestNum = 0;
+      let bestDen = 1;
+      let bestErr = Infinity;
+      for (let den = 1; den <= maxDen; den++) {
+        const num = Math.round(absX * den);
+        const err = Math.abs(absX - num / den);
+        if (err < bestErr) {
+          bestErr = err;
+          bestNum = num;
+          bestDen = den;
+        }
+      }
+      if (bestErr < 1e-8) {
+        const g = gcd(bestNum, bestDen);
+        return { num: sign * (bestNum / g), den: bestDen / g };
+      }
+      const asString = String(x);
+      if (asString.includes('.')) {
+        const decimals = asString.split('.')[1].length;
+        const den = 10 ** decimals;
+        const num = Math.round(x * den);
+        const g = gcd(num, den);
+        return { num: num / g, den: den / g };
+      }
+      return { num: x, den: 1 };
+    }
+
+    function toFractionString(x) {
+      const frac = parseFractionParts(x);
+      return frac.den === 1 ? String(frac.num) : `${frac.num}/${frac.den}`;
+    }
+
+    function parseScalar(value) {
+      const s = String(value).trim().replace(',', '.');
+      if (!s) throw new Error('Debes ingresar un escalar.');
+      if (s.includes('/')) {
+        const parts = s.split('/').map(v => v.trim());
+        if (parts.length !== 2) throw new Error('La fracción no tiene el formato correcto.');
+        const num = Number(parts[0]);
+        const den = Number(parts[1]);
+        if (!Number.isFinite(num) || !Number.isFinite(den) || approxEqual(den, 0)) {
+          throw new Error('La fracción ingresada no es válida.');
+        }
+        return num / den;
+      }
+      const n = Number(s);
+      if (!Number.isFinite(n)) throw new Error('El escalar ingresado no es válido.');
+      return n;
+    }
+
+    function parseMatrix(text) {
+      const rows = text.trim().split(/\r?\n/).filter(Boolean).map(line =>
+        line.split(',').map(v => parseScalar(v.trim()))
+      );
+      if (!rows.length) throw new Error('La matriz está vacía.');
+      const cols = rows[0].length;
+      if (cols < 2) throw new Error('La matriz debe tener al menos dos columnas.');
+      for (const row of rows) {
+        if (row.length !== cols) throw new Error('Todas las filas deben tener el mismo número de columnas.');
+      }
+      return rows;
+    }
+
+    function setError(msg = '') {
+      document.getElementById('errorBox').textContent = msg;
+    }
+
+    function loadMatrix() {
+      try {
+        setError();
+        matrix = parseMatrix(document.getElementById('matrixInput').value);
+        states = [cloneMatrix(matrix)];
+        historyLog = [{ text: 'Matriz inicial cargada', matrix: cloneMatrix(matrix) }];
+        refreshSelectors();
+        render();
+      } catch (e) {
+        setError(e.message);
+      }
+    }
+
+    function resetAll() {
+      matrix = [];
+      states = [];
+      historyLog = [];
+      document.getElementById('matrixInput').value = '';
+      document.getElementById('scaleFactor').value = '';
+      document.getElementById('addFactor').value = '';
+      document.getElementById('historyBox').innerHTML = '';
+      render();
+    }
+
+    function refreshSelectors() {
+      const rows = matrix.length;
+      const ids = ['swapR1', 'swapR2', 'scaleRow', 'addTarget', 'addSource'];
+      ids.forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = '';
+        for (let i = 0; i < rows; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = i + 1;
+          sel.appendChild(opt);
+        }
+      });
+      if (rows > 1) document.getElementById('swapR2').value = 1;
+    }
+
+    function pushState(description) {
+      states.push(cloneMatrix(matrix));
+      historyLog.push({ text: description, matrix: cloneMatrix(matrix) });
+      render();
+    }
+
+    function render() {
+      renderMatrix('matrixContainer', matrix);
+      renderStatus();
+      renderHistory();
+      syncLabels();
+    }
+
+    function syncLabels() {
+      const sr = document.getElementById('scaleRow');
+      const at = document.getElementById('addTarget');
+      if (sr) document.getElementById('scaleRowText').textContent = Number(sr.value) + 1;
+      if (at) document.getElementById('addTargetText').textContent = Number(at.value) + 1;
+    }
+
+    document.addEventListener('change', (e) => {
+      if (['scaleRow', 'addTarget'].includes(e.target.id)) syncLabels();
+    });
+
+    function getPivotPositions(m) {
+      const pivots = [];
+      const lastCoefCol = m[0].length - 2;
+      for (let i = 0; i < m.length; i++) {
+        let pivotCol = -1;
+        for (let j = 0; j <= lastCoefCol; j++) {
+          if (!approxEqual(m[i][j], 0)) {
+            pivotCol = j;
+            break;
+          }
+        }
+        if (pivotCol !== -1) {
+          pivots.push({ row: i, col: pivotCol });
+        }
+      }
+      return pivots;
+    }
+
+    function renderMatrix(containerId, m) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      if (!m || !m.length) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'matrix-wrap';
+
+      const left = document.createElement('div');
+      left.className = 'matrix-bracket left';
+
+      const grid = document.createElement('div');
+      grid.className = 'matrix-grid';
+      grid.style.gridTemplateColumns = `repeat(${m[0].length}, auto)`;
+
+      const sepIndex = m[0].length - 2;
+      const pivots = getPivotPositions(m);
+      const pivotSet = new Set(pivots.map(p => `${p.row}-${p.col}`));
+      const cellRefs = [];
+
+      for (let i = 0; i < m.length; i++) {
+        for (let j = 0; j < m[i].length; j++) {
+          const cell = document.createElement('div');
+          cell.className = 'matrix-cell';
+
+          const fractionText = toFractionString(m[i][j]);
+          const isWide = fractionText.length >= 5;
+          const isVeryWide = fractionText.length >= 7;
+
+          if (j === sepIndex) cell.classList.add('before-sep');
+          if (j === sepIndex + 1) cell.classList.add('after-sep');
+          if (j === sepIndex && isWide) cell.style.paddingRight = isVeryWide ? '20px' : '16px';
+          if (j === sepIndex + 1 && isWide) {
+            cell.style.paddingLeft = isVeryWide ? '20px' : '16px';
+            cell.style.minWidth = isVeryWide ? '62px' : '50px';
+          }
+
+          const valueSpan = document.createElement('span');
+          valueSpan.textContent = fractionText;
+
+          if (isWide) valueSpan.classList.add('wide-value');
+          if (isVeryWide) valueSpan.classList.add('very-wide-value');
+          if (pivotSet.has(`${i}-${j}`) && isDisplayPivotValue(m[i][j])) {
+            valueSpan.classList.add('pivot');
+          }
+
+          cell.appendChild(valueSpan);
+          grid.appendChild(cell);
+          cellRefs.push({ row: i, col: j, el: cell });
+        }
+      }
+
+      const sep = document.createElement('div');
+      sep.className = 'matrix-separator';
+      grid.appendChild(sep);
+
+      requestAnimationFrame(() => {
+        const lastCoefCells = cellRefs.filter(c => c.col === sepIndex);
+        const indepCells = cellRefs.filter(c => c.col === sepIndex + 1);
+        if (lastCoefCells.length && indepCells.length) {
+          const rightEdge = Math.max(...lastCoefCells.map(c => c.el.offsetLeft + c.el.offsetWidth));
+          const leftEdge = Math.min(...indepCells.map(c => c.el.offsetLeft));
+          const midpoint = (rightEdge + leftEdge) / 2;
+          sep.style.left = `${midpoint}px`;
+        }
+      });
+
+      const right = document.createElement('div');
+      right.className = 'matrix-bracket right';
+
+      wrap.appendChild(left);
+      wrap.appendChild(grid);
+      wrap.appendChild(right);
+      container.appendChild(wrap);
+    }
+
+    function renderHistory() {
+      const box = document.getElementById('historyBox');
+      box.innerHTML = '';
+      historyLog.forEach((step, idx) => {
+        const div = document.createElement('div');
+        div.className = 'history-step';
+
+        const title = document.createElement('div');
+        title.className = 'history-title';
+        title.textContent = `Paso ${idx}: ${step.text}`;
+        div.appendChild(title);
+
+        const matrixDiv = document.createElement('div');
+        matrixDiv.id = `hist-${idx}`;
+        div.appendChild(matrixDiv);
+        box.appendChild(div);
+        renderMatrix(`hist-${idx}`, step.matrix);
+      });
+    }
+
+    function renderStatus() {
+      const box = document.getElementById('statusBox');
+      box.classList.remove('success');
+      if (!matrix.length) {
+        box.textContent = 'Estado: sin cargar';
+        return;
+      }
+      const isEscalonada = isREF(matrix);
+      const isEscalonadaReducida = isRREF(matrix);
+
+      if (isEscalonadaReducida) {
+        box.textContent = 'La matriz está en forma escalonada reducida';
+        box.classList.add('success');
+      } else if (isEscalonada) {
+        box.textContent = 'La matriz está en forma escalonada';
+        box.classList.add('success');
+      } else {
+        box.textContent = 'Estado: aún no está en forma escalonada';
+      }
+    }
+
+    function swapRows() {
+      if (!matrix.length) return;
+      try {
+        setError();
+        const i = Number(document.getElementById('swapR1').value);
+        const j = Number(document.getElementById('swapR2').value);
+        if (i === j) throw new Error('Debes escoger dos filas diferentes.');
+        [matrix[i], matrix[j]] = [matrix[j], matrix[i]];
+        pushState(`Intercambiar R${i + 1} ↔ R${j + 1}`);
+      } catch (e) {
+        setError(e.message);
+      }
+    }
+
+    function scaleRowOp() {
+      if (!matrix.length) return;
+      try {
+        setError();
+        const i = Number(document.getElementById('scaleRow').value);
+        const kText = document.getElementById('scaleFactor').value;
+        const k = parseScalar(kText);
+        matrix[i] = matrix[i].map(x => cleanNumber(k * x));
+        pushState(`R${i + 1} ← (${kText})·R${i + 1}`);
+      } catch (e) {
+        setError(e.message);
+      }
+    }
+
+    function addRows() {
+      if (!matrix.length) return;
+      try {
+        setError();
+        const target = Number(document.getElementById('addTarget').value);
+        const source = Number(document.getElementById('addSource').value);
+        const kText = document.getElementById('addFactor').value;
+        const k = parseScalar(kText);
+        const newRow = [];
+        for (let j = 0; j < matrix[target].length; j++) {
+          newRow.push(cleanNumber(matrix[target][j] + k * matrix[source][j]));
+        }
+        matrix[target] = newRow;
+        pushState(`R${target + 1} ← R${target + 1} + (${kText})·R${source + 1}`);
+      } catch (e) {
+        setError(e.message);
+      }
+    }
+
+    function undo() {
+      if (states.length <= 1) return;
+      states.pop();
+      historyLog.pop();
+      matrix = cloneMatrix(states[states.length - 1]);
+      render();
+    }
+
+    function leadingIndex(row) {
+      const lastCoefCol = row.length - 2;
+      for (let j = 0; j <= lastCoefCol; j++) {
+        if (!approxEqual(row[j], 0)) return j;
+      }
+      return -1;
+    }
+
+    function isDisplayPivotValue(x) {
+      return !approxEqual(x, 0);
+    }
+
+    function isREF(m) {
+      let prevLead = -1;
+      let zeroRowStarted = false;
+      for (let i = 0; i < m.length; i++) {
+        const lead = leadingIndex(m[i]);
+        if (lead === -1) {
+          zeroRowStarted = true;
+          continue;
+        }
+        if (zeroRowStarted) return false;
+        if (lead <= prevLead) return false;
+        for (let k = i + 1; k < m.length; k++) {
+          if (!approxEqual(m[k][lead], 0)) return false;
+        }
+        prevLead = lead;
+      }
+      return true;
+    }
+
+    function isRREF(m) {
+      if (!isREF(m)) return false;
+      for (let i = 0; i < m.length; i++) {
+        const lead = leadingIndex(m[i]);
+        if (lead === -1) continue;
+        if (!approxEqual(m[i][lead], 1)) return false;
+        for (let k = 0; k < m.length; k++) {
+          if (k !== i && !approxEqual(m[k][lead], 0)) return false;
+        }
+      }
+      return true;
+    }
+
+    async function actualizarContador() {
+      try {
+        const namespace = 'esap-gauss-narino-alto-putumayo';
+        const key = 'visitas-principal';
+        const resp = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
+        const data = await resp.json();
+        document.getElementById('visit-counter').textContent = data.value;
+      } catch (e) {
+        const el = document.getElementById('visit-counter');
+        if (el) el.textContent = 'No disponible';
+      }
+    }
+
+    render();
+    actualizarContador();
+  </script>
+</body>
+</html>
