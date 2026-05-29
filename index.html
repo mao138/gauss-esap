@@ -279,7 +279,7 @@
 
     .main-grid{
       display:grid;
-      grid-template-columns: 1.2fr 430px;
+      grid-template-columns:1.2fr 430px;
       gap:20px;
       align-items:start;
     }
@@ -421,7 +421,7 @@
       border-radius:24px;
       background:#ffffff;
       border:1px solid var(--border);
-      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.03);
+      box-shadow:inset 0 0 0 1px rgba(15,23,42,.03);
       overflow:hidden;
     }
 
@@ -824,6 +824,20 @@
       return r.den === 1 ? String(r.num) : `${r.num}/${r.den}`;
     }
 
+    function fracToLatex(a){
+      const r = reduceFrac(a);
+
+      if (r.den === 1){
+        return String(r.num);
+      }
+
+      if (r.num < 0){
+        return `-\\frac{${Math.abs(r.num)}}{${r.den}}`;
+      }
+
+      return `\\frac{${r.num}}{${r.den}}`;
+    }
+
     function parseScalarToFrac(value){
       const s = String(value).trim().replace(',', '.');
 
@@ -946,6 +960,7 @@
         states = [cloneMatrix(matrix)];
         historyLog = [{
           text:'Matriz inicial cargada',
+          latexText:'Matriz inicial cargada',
           matrix:cloneMatrix(matrix)
         }];
 
@@ -981,11 +996,12 @@
       document.getElementById('inputPanel').classList.remove('hidden');
     }
 
-    function pushState(description){
+    function pushState(description, latexDescription=description){
       states.push(cloneMatrix(matrix));
 
       historyLog.push({
         text:description,
+        latexText:latexDescription,
         matrix:cloneMatrix(matrix)
       });
 
@@ -1007,7 +1023,10 @@
 
         [matrix[i], matrix[j]] = [matrix[j], matrix[i]];
 
-        pushState(`Intercambiar F${i+1} ↔ F${j+1}`);
+        pushState(
+          `Intercambiar F${i+1} ↔ F${j+1}`,
+          `F_{${i+1}} \\leftrightarrow F_{${j+1}}`
+        );
       }catch(e){
         setError(e.message);
       }
@@ -1025,7 +1044,10 @@
 
         matrix[i] = matrix[i].map(x => fracMul(k, x));
 
-        pushState(`F${i+1} ← (${kText})·F${i+1}`);
+        pushState(
+          `F${i+1} ← (${kText})·F${i+1}`,
+          `F_{${i+1}} \\leftarrow ${fracToLatex(k)}F_{${i+1}}`
+        );
       }catch(e){
         setError(e.message);
       }
@@ -1050,7 +1072,10 @@
 
         matrix[target] = newRow;
 
-        pushState(`F${target+1} ← F${target+1} + (${kText})·F${source+1}`);
+        pushState(
+          `F${target+1} ← F${target+1} + (${kText})·F${source+1}`,
+          `F_{${target+1}} \\leftarrow F_{${target+1}} + (${fracToLatex(k)})F_{${source+1}}`
+        );
       }catch(e){
         setError(e.message);
       }
@@ -1277,6 +1302,29 @@
       ).join('\n');
     }
 
+    function matrixToLatex(m){
+      if (!m || !m.length) return '';
+
+      const cols = m[0].length;
+      const coefCols = cols - 1;
+
+      let columnFormat = '';
+
+      for(let j=0;j<cols;j++){
+        if(j === coefCols){
+          columnFormat += '|';
+        }
+
+        columnFormat += 'c';
+      }
+
+      const rows = m.map(row =>
+        row.map(cell => fracToLatex(cell)).join(' & ')
+      ).join(' \\\\\n');
+
+      return `\\left[\\begin{array}{${columnFormat}}\n${rows}\n\\end{array}\\right]`;
+    }
+
     function downloadPDF(){
       if (!historyLog.length){
         setError('Primero debes cargar una matriz para poder generar el PDF.');
@@ -1291,6 +1339,7 @@
       }
 
       const { jsPDF } = window.jspdf;
+
       const doc = new jsPDF({
         orientation:'portrait',
         unit:'pt',
@@ -1303,6 +1352,7 @@
       const marginLeft = 48;
       const marginRight = 48;
       const usableWidth = pageWidth - marginLeft - marginRight;
+
       let y = 52;
 
       function addPageIfNeeded(extraHeight=24){
@@ -1326,17 +1376,21 @@
         });
       }
 
-      function addMatrixText(m){
+      function addLatexBlock(latex){
         doc.setFont('courier', 'normal');
-        doc.setFontSize(11);
+        doc.setFontSize(9.5);
         doc.setTextColor(17,24,39);
 
-        const lines = matrixToText(m).split('\n');
+        const lines = latex.split('\n');
 
         lines.forEach(line=>{
-          addPageIfNeeded(18);
-          doc.text(line, marginLeft + 16, y);
-          y += 15;
+          const wrapped = doc.splitTextToSize(line, usableWidth - 24);
+
+          wrapped.forEach(wline=>{
+            addPageIfNeeded(14);
+            doc.text(wline, marginLeft + 14, y);
+            y += 13;
+          });
         });
 
         y += 8;
@@ -1365,32 +1419,49 @@
 
       y += 12;
 
-      addText('Resumen de operaciones realizadas y matrices resultantes', marginLeft, 14, 'bold', [17,24,39]);
+      addText('Resumen del proceso en código LaTeX', marginLeft, 14, 'bold', [17,24,39]);
 
       y += 8;
 
+      addText('El siguiente contenido puede copiarse en un documento LaTeX usando modo matemático.', marginLeft, 10, 'italic', [75,85,99]);
+
+      y += 10;
+
       historyLog.forEach((step, idx)=>{
-        addPageIfNeeded(70);
+        addPageIfNeeded(90);
 
         doc.setFillColor(239,246,255);
         doc.setDrawColor(147,197,253);
-        doc.roundedRect(marginLeft, y - 14, usableWidth, 28, 6, 6, 'FD');
+        doc.roundedRect(marginLeft, y - 14, usableWidth, 30, 6, 6, 'FD');
 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(29,78,216);
-        doc.text(`Paso ${idx}: ${step.text}`, marginLeft + 10, y + 4);
+        doc.text(`Paso ${idx}`, marginLeft + 10, y + 5);
 
-        y += 28;
+        y += 34;
 
-        addMatrixText(step.matrix);
+        if(idx === 0){
+          addText('Matriz inicial:', marginLeft, 11, 'bold', [31,41,55]);
+        }else{
+          addText(`Operación: $${step.latexText}$`, marginLeft, 11, 'bold', [31,41,55]);
+        }
+
+        y += 4;
+
+        const latexBlock =
+`\\[
+${matrixToLatex(step.matrix)}
+\\]`;
+
+        addLatexBlock(latexBlock);
       });
 
       y += 8;
 
       addText('Documento generado automáticamente desde el recurso educativo digital interactivo.', marginLeft, 10, 'italic', [107,114,128]);
 
-      doc.save('resumen-gauss-jordan.pdf');
+      doc.save('resumen-gauss-jordan-latex.pdf');
     }
 
     function render(){
