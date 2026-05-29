@@ -185,6 +185,17 @@
       transform:translateY(-1px);
     }
 
+    .pdf-btn{
+      background:var(--purple);
+      color:#fff;
+      border:none;
+      font-weight:bold;
+    }
+
+    .pdf-btn:hover{
+      background:#5b21b6;
+    }
+
     input[type="text"]{
       width:120px;
     }
@@ -279,12 +290,6 @@
     .ops-title h2{
       margin:0;
       font-size:21px;
-    }
-
-    .ops-title .small{
-      color:#e0e7ff;
-      margin-top:4px;
-      font-size:13px;
     }
 
     .ops-grid{
@@ -589,4 +594,776 @@
         <div id="topActions" class="inline hidden" style="margin-top:12px;">
           <button onclick="showInputPanel()">Cambiar matriz</button>
           <button onclick="resetAll()">Reiniciar</button>
-          <button onclick="undo
+          <button onclick="undo()">Deshacer</button>
+          <button class="pdf-btn" onclick="downloadPDF()">Descargar PDF</button>
+        </div>
+
+        <div class="error" id="errorBox"></div>
+
+        <div id="inputPanel" style="margin-top:16px;">
+          <h2>Matriz inicial</h2>
+
+          <p>
+            Ingresa una matriz aumentada escribiendo <strong>cada fila en una línea diferente</strong> y usando <strong>comas para separar las columnas</strong>.
+            Para números decimales usa <strong>punto decimal</strong>, por ejemplo <code>1.5</code> o <code>-0.25</code>.
+            También puedes usar fracciones como <code>1/2</code>, <code>-3/4</code> o <code>5/2</code>.
+          </p>
+
+          <textarea id="matrixInput"></textarea>
+
+          <div class="small">
+            Ejemplo:<br>
+            <code>1,3,1</code><br>
+            <code>2,-1,9</code>
+          </div>
+
+          <div class="inline" style="margin-top:10px;">
+            <button onclick="loadMatrix()">Cargar matriz</button>
+            <button onclick="resetAll()">Reiniciar</button>
+            <button onclick="undo()">Deshacer</button>
+            <button class="pdf-btn" onclick="downloadPDF()">Descargar PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card side-panel">
+        <div class="side-sticky">
+
+          <div class="ops-title">
+            <h2>Operaciones elementales por filas</h2>
+          </div>
+
+          <div class="ops-grid">
+
+            <div class="op-block op-swap">
+              <h3>1. Intercambiar filas</h3>
+
+              <div class="inline">
+                <span class="mini-r">F</span>
+                <select id="swapR1"></select>
+                <span>↔</span>
+                <span class="mini-r">F</span>
+                <select id="swapR2"></select>
+                <button onclick="swapRows()">Aplicar</button>
+              </div>
+            </div>
+
+            <div class="op-block op-scale">
+              <h3>2. Multiplicar una fila por un escalar</h3>
+
+              <div class="inline">
+                <span class="mini-r">F</span>
+                <select id="scaleRow"></select>
+                <span>←</span>
+                <input type="text" id="scaleFactor" value="" />
+                <span>·</span>
+                <span class="mini-r">F</span>
+                <span id="scaleRowText">1</span>
+                <button onclick="scaleRowOp()">Aplicar</button>
+              </div>
+
+              <div class="small" style="margin-top:8px;">
+                Puedes usar enteros, decimales con punto o fracciones, por ejemplo:
+                <code>2</code>, <code>-1.5</code>, <code>1/2</code>.
+              </div>
+            </div>
+
+            <div class="op-block op-add">
+              <h3>3. Reemplazar una fila por la suma de un múltiplo de otra</h3>
+
+              <div class="inline">
+                <span class="mini-r">F</span>
+                <select id="addTarget"></select>
+                <span>←</span>
+                <span class="mini-r">F</span>
+                <span id="addTargetText">1</span>
+                <span>+</span>
+                <input type="text" id="addFactor" value="" />
+                <span>·</span>
+                <span class="mini-r">F</span>
+                <select id="addSource"></select>
+                <button onclick="addRows()">Aplicar</button>
+              </div>
+
+              <div class="small" style="margin-top:8px;">
+                Ejemplo: <code>F2 ← F2 + (1/2)·F1</code>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <h2>Pasos realizados</h2>
+      <div class="history" id="historyBox"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    let matrix = [];
+    let states = [];
+    let historyLog = [];
+
+    function setError(msg=''){
+      document.getElementById('errorBox').textContent = msg;
+    }
+
+    function gcdInt(a,b){
+      a = Math.abs(Math.round(a));
+      b = Math.abs(Math.round(b));
+
+      while(b !== 0){
+        const t = b;
+        b = a % b;
+        a = t;
+      }
+
+      return a || 1;
+    }
+
+    function reduceFrac(f){
+      if (f.den === 0) return f;
+      if (f.num === 0) return {num:0, den:1};
+
+      let num = f.num;
+      let den = f.den;
+
+      if (den < 0){
+        num = -num;
+        den = -den;
+      }
+
+      const g = gcdInt(num, den);
+      return {
+        num:num/g,
+        den:den/g
+      };
+    }
+
+    function makeFrac(num, den=1){
+      return reduceFrac({num, den});
+    }
+
+    function fracAdd(a,b){
+      return reduceFrac({
+        num: a.num * b.den + b.num * a.den,
+        den: a.den * b.den
+      });
+    }
+
+    function fracMul(a,b){
+      return reduceFrac({
+        num: a.num * b.num,
+        den: a.den * b.den
+      });
+    }
+
+    function fracIsZero(a){
+      return a.num === 0;
+    }
+
+    function fracEqualsOne(a){
+      const r = reduceFrac(a);
+      return r.num === r.den;
+    }
+
+    function fracToString(a){
+      const r = reduceFrac(a);
+      return r.den === 1 ? String(r.num) : `${r.num}/${r.den}`;
+    }
+
+    function parseScalarToFrac(value){
+      const s = String(value).trim().replace(',', '.');
+
+      if (!s){
+        throw new Error('Debes ingresar un valor.');
+      }
+
+      if (s.includes('/')){
+        const parts = s.split('/').map(v => v.trim());
+
+        if (parts.length !== 2){
+          throw new Error('La fracción no tiene el formato correcto.');
+        }
+
+        const num = Number(parts[0]);
+        const den = Number(parts[1]);
+
+        if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0){
+          throw new Error('La fracción ingresada no es válida.');
+        }
+
+        return makeFrac(num, den);
+      }
+
+      if (!Number.isFinite(Number(s))){
+        throw new Error('El valor ingresado no es válido.');
+      }
+
+      if (s.includes('.')){
+        const neg = s.startsWith('-');
+        const raw = neg ? s.slice(1) : s;
+        const [ent, dec] = raw.split('.');
+        const den = Math.pow(10, dec.length);
+        const num = Number(ent) * den + Number(dec);
+
+        return makeFrac(neg ? -num : num, den);
+      }
+
+      return makeFrac(Number(s), 1);
+    }
+
+    function parseMatrix(text){
+      const rows = text.trim().split(/\r?\n/).filter(Boolean).map(line =>
+        line.split(',').map(v => parseScalarToFrac(v.trim()))
+      );
+
+      if (!rows.length){
+        throw new Error('La matriz está vacía.');
+      }
+
+      const cols = rows[0].length;
+
+      if (cols < 2){
+        throw new Error('La matriz debe tener al menos dos columnas.');
+      }
+
+      for (const row of rows){
+        if (row.length !== cols){
+          throw new Error('Todas las filas deben tener el mismo número de columnas.');
+        }
+      }
+
+      return rows;
+    }
+
+    function cloneMatrix(m){
+      return m.map(row => row.map(cell => ({
+        num:cell.num,
+        den:cell.den
+      })));
+    }
+
+    function refreshSelectors(){
+      const rows = matrix.length;
+      const ids = ['swapR1','swapR2','scaleRow','addTarget','addSource'];
+
+      ids.forEach(id=>{
+        const sel = document.getElementById(id);
+        sel.innerHTML = '';
+
+        for(let i=0;i<rows;i++){
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = i + 1;
+          sel.appendChild(opt);
+        }
+      });
+
+      if (rows > 1){
+        document.getElementById('swapR2').value = 1;
+      }
+
+      syncLabels();
+    }
+
+    function syncLabels(){
+      const sr = document.getElementById('scaleRow');
+      const at = document.getElementById('addTarget');
+
+      if (sr && sr.value !== ''){
+        document.getElementById('scaleRowText').textContent = Number(sr.value) + 1;
+      }
+
+      if (at && at.value !== ''){
+        document.getElementById('addTargetText').textContent = Number(at.value) + 1;
+      }
+    }
+
+    document.addEventListener('change', (e)=>{
+      if (['scaleRow','addTarget'].includes(e.target.id)){
+        syncLabels();
+      }
+    });
+
+    function loadMatrix(){
+      try{
+        setError();
+
+        matrix = parseMatrix(document.getElementById('matrixInput').value);
+        states = [cloneMatrix(matrix)];
+        historyLog = [{
+          text:'Matriz inicial cargada',
+          matrix:cloneMatrix(matrix)
+        }];
+
+        refreshSelectors();
+
+        document.getElementById('inputPanel').classList.add('hidden');
+        document.getElementById('topActions').classList.remove('hidden');
+
+        render();
+      }catch(e){
+        setError(e.message);
+      }
+    }
+
+    function resetAll(){
+      matrix = [];
+      states = [];
+      historyLog = [];
+
+      document.getElementById('matrixInput').value = '';
+      document.getElementById('scaleFactor').value = '';
+      document.getElementById('addFactor').value = '';
+      document.getElementById('historyBox').innerHTML = '';
+
+      document.getElementById('inputPanel').classList.remove('hidden');
+      document.getElementById('topActions').classList.add('hidden');
+
+      setError();
+      render();
+    }
+
+    function showInputPanel(){
+      document.getElementById('inputPanel').classList.remove('hidden');
+    }
+
+    function pushState(description){
+      states.push(cloneMatrix(matrix));
+
+      historyLog.push({
+        text:description,
+        matrix:cloneMatrix(matrix)
+      });
+
+      render();
+    }
+
+    function swapRows(){
+      if (!matrix.length) return;
+
+      try{
+        setError();
+
+        const i = Number(document.getElementById('swapR1').value);
+        const j = Number(document.getElementById('swapR2').value);
+
+        if (i === j){
+          throw new Error('Debes escoger dos filas diferentes.');
+        }
+
+        [matrix[i], matrix[j]] = [matrix[j], matrix[i]];
+
+        pushState(`Intercambiar F${i+1} ↔ F${j+1}`);
+      }catch(e){
+        setError(e.message);
+      }
+    }
+
+    function scaleRowOp(){
+      if (!matrix.length) return;
+
+      try{
+        setError();
+
+        const i = Number(document.getElementById('scaleRow').value);
+        const kText = document.getElementById('scaleFactor').value;
+        const k = parseScalarToFrac(kText);
+
+        matrix[i] = matrix[i].map(x => fracMul(k, x));
+
+        pushState(`F${i+1} ← (${kText})·F${i+1}`);
+      }catch(e){
+        setError(e.message);
+      }
+    }
+
+    function addRows(){
+      if (!matrix.length) return;
+
+      try{
+        setError();
+
+        const target = Number(document.getElementById('addTarget').value);
+        const source = Number(document.getElementById('addSource').value);
+        const kText = document.getElementById('addFactor').value;
+        const k = parseScalarToFrac(kText);
+
+        const newRow = [];
+
+        for(let j=0;j<matrix[target].length;j++){
+          newRow.push(fracAdd(matrix[target][j], fracMul(k, matrix[source][j])));
+        }
+
+        matrix[target] = newRow;
+
+        pushState(`F${target+1} ← F${target+1} + (${kText})·F${source+1}`);
+      }catch(e){
+        setError(e.message);
+      }
+    }
+
+    function undo(){
+      if (states.length <= 1) return;
+
+      states.pop();
+      historyLog.pop();
+
+      matrix = cloneMatrix(states[states.length - 1]);
+
+      render();
+    }
+
+    function leadingIndex(row){
+      const lastCoefCol = row.length - 2;
+
+      for(let j=0;j<=lastCoefCol;j++){
+        if (!fracIsZero(row[j])){
+          return j;
+        }
+      }
+
+      return -1;
+    }
+
+    function getPivotPositions(m){
+      const pivots = [];
+
+      if (!m || !m.length) return pivots;
+
+      const lastCoefCol = m[0].length - 2;
+
+      for(let i=0;i<m.length;i++){
+        let pivotCol = -1;
+
+        for(let j=0;j<=lastCoefCol;j++){
+          if (!fracIsZero(m[i][j])){
+            pivotCol = j;
+            break;
+          }
+        }
+
+        if (pivotCol !== -1 && !fracIsZero(m[i][pivotCol])){
+          pivots.push({
+            row:i,
+            col:pivotCol
+          });
+        }
+      }
+
+      return pivots;
+    }
+
+    function isREF(m){
+      let prevLead = -1;
+      let zeroRowStarted = false;
+
+      for(let i=0;i<m.length;i++){
+        const lead = leadingIndex(m[i]);
+
+        if (lead === -1){
+          zeroRowStarted = true;
+          continue;
+        }
+
+        if (zeroRowStarted) return false;
+        if (lead <= prevLead) return false;
+
+        for(let k=i+1;k<m.length;k++){
+          if (!fracIsZero(m[k][lead])){
+            return false;
+          }
+        }
+
+        prevLead = lead;
+      }
+
+      return true;
+    }
+
+    function isRREF(m){
+      if (!isREF(m)) return false;
+
+      for(let i=0;i<m.length;i++){
+        const lead = leadingIndex(m[i]);
+
+        if (lead === -1) continue;
+
+        if (!fracEqualsOne(m[i][lead])){
+          return false;
+        }
+
+        for(let k=0;k<m.length;k++){
+          if (k !== i && !fracIsZero(m[k][lead])){
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+
+    function renderMatrix(containerId, m){
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      if (!m || !m.length) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'matrix-wrap';
+
+      const left = document.createElement('div');
+      left.className = 'matrix-bracket left';
+
+      const grid = document.createElement('div');
+      grid.className = 'matrix-grid';
+      grid.style.gridTemplateColumns = `repeat(${m[0].length}, auto)`;
+
+      const sepIndex = m[0].length - 2;
+      const pivots = getPivotPositions(m);
+      const pivotSet = new Set(pivots.map(p => `${p.row}-${p.col}`));
+      const cellRefs = [];
+
+      for(let i=0;i<m.length;i++){
+        for(let j=0;j<m[i].length;j++){
+          const cell = document.createElement('div');
+          cell.className = 'matrix-cell';
+
+          const valueSpan = document.createElement('span');
+          valueSpan.textContent = fracToString(m[i][j]);
+
+          if (
+            pivotSet.has(`${i}-${j}`) &&
+            j <= sepIndex &&
+            !fracIsZero(m[i][j])
+          ){
+            valueSpan.classList.add('pivot');
+          }
+
+          cell.appendChild(valueSpan);
+          grid.appendChild(cell);
+
+          cellRefs.push({
+            row:i,
+            col:j,
+            el:cell
+          });
+        }
+      }
+
+      const sep = document.createElement('div');
+      sep.className = 'matrix-separator';
+      grid.appendChild(sep);
+
+      requestAnimationFrame(()=>{
+        const lastCoefCells = cellRefs.filter(c => c.col === sepIndex);
+        const indepCells = cellRefs.filter(c => c.col === sepIndex + 1);
+
+        if (lastCoefCells.length && indepCells.length){
+          const rightEdge = Math.max(...lastCoefCells.map(c => c.el.offsetLeft + c.el.offsetWidth));
+          const leftEdge = Math.min(...indepCells.map(c => c.el.offsetLeft));
+          const midpoint = (rightEdge + leftEdge) / 2;
+
+          sep.style.left = `${midpoint}px`;
+        }
+      });
+
+      const right = document.createElement('div');
+      right.className = 'matrix-bracket right';
+
+      wrap.appendChild(left);
+      wrap.appendChild(grid);
+      wrap.appendChild(right);
+
+      container.appendChild(wrap);
+    }
+
+    function renderHistory(){
+      const box = document.getElementById('historyBox');
+      box.innerHTML = '';
+
+      historyLog.forEach((step, idx)=>{
+        const div = document.createElement('div');
+        div.className = 'history-step';
+
+        const title = document.createElement('div');
+        title.className = 'history-title';
+        title.textContent = `Paso ${idx}: ${step.text}`;
+
+        div.appendChild(title);
+
+        const matrixDiv = document.createElement('div');
+        matrixDiv.id = `hist-${idx}`;
+
+        div.appendChild(matrixDiv);
+        box.appendChild(div);
+
+        renderMatrix(`hist-${idx}`, step.matrix);
+      });
+    }
+
+    function renderStatus(){
+      const box = document.getElementById('statusBox');
+      box.classList.remove('success');
+
+      if (!matrix.length){
+        box.textContent = 'Estado: sin cargar';
+        return;
+      }
+
+      const escalonada = isREF(matrix);
+      const reducida = isRREF(matrix);
+
+      if (reducida){
+        box.textContent = 'La matriz está en forma escalonada reducida';
+        box.classList.add('success');
+      }else if (escalonada){
+        box.textContent = 'La matriz está en forma escalonada';
+        box.classList.add('success');
+      }else{
+        box.textContent = 'Estado: aún no está en forma escalonada';
+      }
+    }
+
+    function matrixToText(m){
+      if (!m || !m.length) return '';
+
+      return m.map(row =>
+        '[ ' + row.map(cell => fracToString(cell)).join('   ') + ' ]'
+      ).join('\n');
+    }
+
+    function downloadPDF(){
+      if (!historyLog.length){
+        setError('Primero debes cargar una matriz para poder generar el PDF.');
+        return;
+      }
+
+      setError();
+
+      if (!window.jspdf || !window.jspdf.jsPDF){
+        setError('No se pudo cargar la librería para generar el PDF. Verifica la conexión a internet.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation:'portrait',
+        unit:'pt',
+        format:'letter'
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      const marginLeft = 48;
+      const marginRight = 48;
+      const usableWidth = pageWidth - marginLeft - marginRight;
+      let y = 52;
+
+      function addPageIfNeeded(extraHeight=24){
+        if (y + extraHeight > pageHeight - 48){
+          doc.addPage();
+          y = 52;
+        }
+      }
+
+      function addText(text, x, fontSize=11, style='normal', color=[31,41,55]){
+        doc.setFont('helvetica', style);
+        doc.setFontSize(fontSize);
+        doc.setTextColor(color[0], color[1], color[2]);
+
+        const lines = doc.splitTextToSize(text, usableWidth);
+
+        lines.forEach(line=>{
+          addPageIfNeeded(fontSize + 8);
+          doc.text(line, x, y);
+          y += fontSize + 5;
+        });
+      }
+
+      function addMatrixText(m){
+        doc.setFont('courier', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(17,24,39);
+
+        const lines = matrixToText(m).split('\n');
+
+        lines.forEach(line=>{
+          addPageIfNeeded(18);
+          doc.text(line, marginLeft + 16, y);
+          y += 15;
+        });
+
+        y += 8;
+      }
+
+      doc.setFillColor(29,78,216);
+      doc.rect(0, 0, pageWidth, 86, 'F');
+
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('Recurso educativo digital interactivo', marginLeft, 34);
+
+      doc.setFontSize(13);
+      doc.text('Método de eliminación de Gauss-Jordan', marginLeft, 58);
+
+      y = 112;
+
+      addText('ESCUELA SUPERIOR DE ADMINISTRACIÓN PÚBLICA', marginLeft, 11, 'bold', [31,41,55]);
+      addText('Territorial Nariño Alto Putumayo', marginLeft, 11, 'normal', [75,85,99]);
+      addText('Elaborado por Hamilton Mauricio Ruiz', marginLeft, 11, 'normal', [75,85,99]);
+
+      y += 8;
+
+      addText('Programa de Administración Pública Territorial · Núcleo complementario · Asignatura de Matemáticas', marginLeft, 11, 'bold', [29,78,216]);
+
+      y += 12;
+
+      addText('Resumen de operaciones realizadas y matrices resultantes', marginLeft, 14, 'bold', [17,24,39]);
+
+      y += 8;
+
+      historyLog.forEach((step, idx)=>{
+        addPageIfNeeded(70);
+
+        doc.setFillColor(239,246,255);
+        doc.setDrawColor(147,197,253);
+        doc.roundedRect(marginLeft, y - 14, usableWidth, 28, 6, 6, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(29,78,216);
+        doc.text(`Paso ${idx}: ${step.text}`, marginLeft + 10, y + 4);
+
+        y += 28;
+
+        addMatrixText(step.matrix);
+      });
+
+      y += 8;
+
+      addText('Documento generado automáticamente desde el recurso educativo digital interactivo.', marginLeft, 10, 'italic', [107,114,128]);
+
+      doc.save('resumen-gauss-jordan.pdf');
+    }
+
+    function render(){
+      renderMatrix('matrixContainer', matrix);
+      renderStatus();
+      renderHistory();
+      syncLabels();
+    }
+
+    render();
+  </script>
+</body>
+</html>
