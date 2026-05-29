@@ -3,429 +3,681 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Eliminación de Gauss Interactiva</title>
+  <title>Método de eliminación de Gauss-Jordan · ESAP</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    :root{
-      --bg:#f7f7fb;
-      --card:#ffffff;
-      --text:#1f2937;
-      --muted:#6b7280;
-      --border:#d1d5db;
-      --accent:#111827;
-      --ok:#166534;
-      --okbg:#ecfdf5;
-      --okbd:#86efac;
-      --red:#b91c1c;
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --muted: #64748b;
+      --text: #0f172a;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+      --amber-bg: #fff7ed;
+      --amber-text: #9a3412;
+      --amber-border: #fdba74;
+      --violet-bg: #f5f3ff;
+      --violet-text: #6d28d9;
+      --violet-border: #c4b5fd;
+      --emerald-bg: #ecfdf5;
+      --emerald-text: #166534;
+      --emerald-border: #86efac;
+      --sky-bg: #eff6ff;
+      --sky-text: #1d4ed8;
+      --sky-border: #93c5fd;
+      --rose-bg: #fff1f2;
+      --rose-text: #be123c;
+      --rose-border: #fda4af;
+      --success-bg: #ecfdf5;
+      --success-text: #166534;
+      --success-border: #86efac;
+      --danger-bg: #fef2f2;
+      --danger-text: #991b1b;
+      --danger-border: #fca5a5;
+      --neutral-bg: #f8fafc;
+      --neutral-text: #334155;
+      --neutral-border: #cbd5e1;
+      --pivot: #dc2626;
+      --accent: #0f172a;
     }
-
-    *{box-sizing:border-box}
-
-    body{
-      margin:0;
-      font-family:Arial,sans-serif;
-      background:var(--bg);
-      color:var(--text);
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+      color: var(--text);
     }
-
-    .wrap{
-      max-width:1240px;
-      margin:0 auto;
-      padding:24px;
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 22px;
     }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:18px;
-      box-shadow:0 1px 2px rgba(0,0,0,.04);
-      margin-bottom:20px;
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
     }
-
-    .inline{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
+    .header-card {
+      padding: 22px 24px;
+      margin-bottom: 20px;
     }
-
-    .tophead{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:16px;
+    .header-flex {
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
     }
-
-    .inst1{
-      font-size:13px;
-      color:var(--muted);
-      font-weight:bold;
-      letter-spacing:.4px;
+    .header-left {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      min-width: 0;
     }
-
-    .inst2{
-      font-size:13px;
-      color:var(--muted);
-      font-weight:bold;
-      margin-top:2px;
+    .logo-box {
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-radius: 24px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.03);
+      overflow: hidden;
     }
-
-    .inst3{
-      font-size:13px;
-      color:var(--muted);
-      margin-top:6px;
+    .logo-box img {
+      width: 104px;
+      height: 104px;
+      object-fit: contain;
     }
-
-    h1{
-      margin:6px 0 8px;
-      font-size:28px;
+    .eyebrow {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 6px;
     }
-
-    h2{
-      margin:0 0 10px;
+    .title {
+      font-size: 34px;
+      line-height: 1.15;
+      font-weight: 800;
+      margin: 0;
     }
-
-    h3{
-      margin:0 0 10px;
-      font-size:18px;
+    .subtitle {
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: 15px;
+      max-width: 760px;
     }
-
-    p,.small{
-      color:var(--muted);
+    .byline {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 14px;
     }
-
-    textarea{
-      width:100%;
-      min-height:120px;
-      resize:vertical;
-      font-family:Consolas,monospace;
-      font-size:14px;
-      padding:12px;
-      border:1px solid var(--border);
-      border-radius:8px;
+    .header-right {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
     }
-
-    button,select,input{
-      padding:9px 12px;
-      border:1px solid var(--border);
-      border-radius:8px;
-      font-size:14px;
-      background:#fff;
+    .chip {
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--neutral-text);
     }
-
-    button{
-      cursor:pointer;
+    .chip.success {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
     }
-
-    button:hover{
-      background:#f3f4f6;
+    .chip.info {
+      background: #f8fafc;
+      color: var(--neutral-text);
     }
-
-    input[type="text"]{
-      width:120px;
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) 400px;
+      gap: 20px;
+      align-items: start;
     }
-
-    .hidden{
-      display:none !important;
+    .main-panel, .side-panel {
+      padding: 20px;
     }
-
-    .error{
-      color:#b91c1c;
-      font-weight:bold;
-      min-height:20px;
-      margin-top:8px;
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0 0 12px;
     }
-
-    .status{
-      margin-top:12px;
-      padding:12px;
-      border-radius:8px;
-      background:#f9fafb;
-      border:1px solid var(--border);
-      font-weight:bold;
+    .main-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
     }
-
-    .status.success{
-      color:var(--ok);
-      background:var(--okbg);
-      border-color:var(--okbd);
-      animation:blinkGreen 1s step-start infinite;
+    .state-box {
+      border-radius: 16px;
+      padding: 12px 14px;
+      border: 1px solid var(--neutral-border);
+      background: var(--neutral-bg);
+      color: var(--neutral-text);
+      font-weight: 700;
+      min-width: 280px;
     }
-
-    @keyframes blinkGreen{
-      50%{opacity:.45}
+    .state-box.success {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
     }
-
-    .main-grid{
-      display:grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap:20px;
-      align-items:start;
+    .state-box.danger {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border-color: var(--danger-border);
     }
-
-    .ops-grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:14px;
+    .state-box.blink {
+      animation: blinkGreen 1s step-start infinite;
     }
-
-    .op-block{
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:12px;
-      background:#fafafa;
+    @keyframes blinkGreen {
+      50% { opacity: 0.45; }
     }
-
-    .matrix-wrap{
-      display:inline-flex;
-      align-items:stretch;
-      gap:10px;
-      margin-top:8px;
-      max-width:100%;
-      overflow-x:auto;
-      padding-bottom:4px;
+    .pdf-btn {
+      padding: 11px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border-strong);
+      background: var(--text);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
     }
-
-    .matrix-bracket{
-      width:16px;
-      min-width:16px;
-      align-self:stretch;
+    .pdf-btn[disabled] {
+      background: #cbd5e1;
+      color: #475569;
+      cursor: not-allowed;
+      border-color: #cbd5e1;
     }
-
-    .matrix-bracket.left{
-      border-left:3px solid var(--accent);
-      border-top:3px solid var(--accent);
-      border-bottom:3px solid var(--accent);
-      border-top-left-radius:14px;
-      border-bottom-left-radius:14px;
+    .matrix-stage {
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      padding: 24px;
+      overflow-x: auto;
+      min-height: 300px;
     }
-
-    .matrix-bracket.right{
-      border-right:3px solid var(--accent);
-      border-top:3px solid var(--accent);
-      border-bottom:3px solid var(--accent);
-      border-top-right-radius:14px;
-      border-bottom-right-radius:14px;
+    .matrix-info-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 14px;
     }
-
-    .matrix-grid{
-      display:grid;
-      gap:12px 18px;
-      align-items:center;
-      justify-items:center;
-      padding:8px 8px;
-      position:relative;
-      min-width:max-content;
+    .legend {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 10px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
     }
-
-    .matrix-cell{
-      min-width:34px;
-      text-align:center;
-      font-size:22px;
-      line-height:1.1;
-      padding:2px 4px;
-      position:relative;
-      z-index:1;
+    .legend-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid var(--pivot);
+      display: inline-block;
+      background: #fff;
     }
-
-    .pivot{
-      color:var(--red);
-      border:2px solid var(--red);
-      border-radius:999px;
-      min-width:40px;
-      height:40px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:bold;
-      background:#fff;
-      padding:0 8px;
-      white-space:nowrap;
-      line-height:1;
+    .pivot-list {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: var(--sky-bg);
+      color: var(--sky-text);
+      border: 1px solid var(--sky-border);
+      font-size: 14px;
+      font-weight: 700;
     }
-
-    .matrix-separator{
-      position:absolute;
-      top:0;
-      bottom:0;
-      width:0;
-      border-left:3px solid var(--accent);
-      pointer-events:none;
-      z-index:0;
-      transform:translateX(-50%);
+    .result-box {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: #fff;
     }
-
-    .history{
-      max-height:460px;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+    .result-box h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
     }
-
-    .history-step{
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:12px;
-      background:#fcfcfd;
+    .result-box p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
     }
-
-    .history-title{
-      font-weight:bold;
-      margin-bottom:8px;
+    .matrix-wrap {
+      display: inline-flex;
+      align-items: stretch;
+      gap: 12px;
+      margin: 6px auto;
+      max-width: 100%;
+      overflow-x: auto;
+      padding-bottom: 6px;
     }
-
-    code{
-      background:#f3f4f6;
-      padding:2px 6px;
-      border-radius:6px;
+    .matrix-bracket {
+      width: 18px;
+      min-width: 18px;
+      align-self: stretch;
     }
+    .matrix-bracket.left {
+      border-left: 4px solid var(--accent);
+      border-top: 4px solid var(--accent);
+      border-bottom: 4px solid var(--accent);
+      border-top-left-radius: 18px;
+      border-bottom-left-radius: 18px;
+    }
+    .matrix-bracket.right {
+      border-right: 4px solid var(--accent);
+      border-top: 4px solid var(--accent);
+      border-bottom: 4px solid var(--accent);
+      border-top-right-radius: 18px;
+      border-bottom-right-radius: 18px;
+    }
+    .matrix-grid {
+      display: grid;
+      gap: 16px 24px;
+      align-items: center;
+      justify-items: center;
+      padding: 12px 10px;
+      position: relative;
+      min-width: max-content;
+    }
+    .matrix-cell {
+      min-width: 46px;
+      text-align: center;
+      font-size: 34px;
+      line-height: 1.1;
+      padding: 2px 4px;
+      position: relative;
+      z-index: 1;
+      font-weight: 600;
+    }
+    .matrix-separator {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      border-left: 4px solid var(--accent);
+      pointer-events: none;
+      z-index: 0;
+      transform: translateX(-50%);
+    }
+    .pivot {
+      color: var(--pivot);
+      border: 3px solid var(--pivot);
+      border-radius: 999px;
+      min-width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      padding: 0 8px;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+    .side-sticky {
+      position: sticky;
+      top: 16px;
+    }
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .block {
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+    .block h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+    .block p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 8px;
+    }
+    .tag.amber { background: var(--amber-bg); color: var(--amber-text); border:1px solid var(--amber-border); }
+    .tag.violet { background: var(--violet-bg); color: var(--violet-text); border:1px solid var(--violet-border); }
+    .tag.emerald { background: var(--emerald-bg); color: var(--emerald-text); border:1px solid var(--emerald-border); }
 
-    @media (max-width:980px){
-      .main-grid{
-        grid-template-columns:1fr;
+    .operation-card {
+      border-radius: 20px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+    .operation-card.amber { background: var(--amber-bg); border-color: var(--amber-border); }
+    .operation-card.violet { background: var(--violet-bg); border-color: var(--violet-border); }
+    .operation-card.emerald { background: var(--emerald-bg); border-color: var(--emerald-border); }
+    .operation-card h4 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 90px 1fr;
+      gap: 10px;
+    }
+    select, input, textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--border-strong);
+      background: #fff;
+      padding: 11px 12px;
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+    }
+    textarea {
+      min-height: 145px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .btn {
+      padding: 11px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border-strong);
+      font-weight: 700;
+      cursor: pointer;
+      background: #fff;
+      color: var(--text);
+    }
+    .btn.primary {
+      background: var(--text);
+      color: #fff;
+      border-color: var(--text);
+    }
+    .btn.rose {
+      background: #e11d48;
+      color: #fff;
+      border-color: #e11d48;
+    }
+    .example-box {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: var(--sky-bg);
+      border: 1px solid var(--sky-border);
+      color: var(--sky-text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .timeline-card {
+      padding: 20px;
+    }
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .timeline-item {
+      position: relative;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      padding: 16px 16px 16px 18px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 7px;
+      background: var(--neutral-border);
+    }
+    .timeline-item.amber::before { background: var(--amber-border); }
+    .timeline-item.violet::before { background: var(--violet-border); }
+    .timeline-item.emerald::before { background: var(--emerald-border); }
+    .timeline-item.neutral::before { background: var(--neutral-border); }
+    .timeline-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .timeline-title {
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .timeline-badge {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .timeline-matrix {
+      overflow-x: auto;
+      padding-top: 6px;
+    }
+    .footer-note {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px dashed var(--border-strong);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
       }
-      .tophead{
-        flex-direction:column;
+      .side-sticky {
+        position: static;
       }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <div class="tophead">
+    <section class="card header-card">
+      <div class="header-flex">
+        <div class="header-left">
+          <div class="logo-box">
+            <img id="logoEsap" alt="Logo ESAP" />
+          </div>
+          <div>
+            <div class="eyebrow">Recurso educativo digital interactivo</div>
+            <h1 class="title">Método de eliminación de Gauss-Jordan</h1>
+            <div class="subtitle">Recurso educativo digital interactivo para la solución paso a paso de sistemas de ecuaciones lineales mediante operaciones elementales por filas.</div>
+            <div class="byline">Escuela Superior de Administración Pública · Territorial Nariño Alto Putumayo · Elaborado por Hamilton Mauricio Ruiz, docente de planta.</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div id="headerStateChip" class="chip success">Estado: lista para operar</div>
+          <div class="chip info">Visitas:
+            <img src="https://api.visitorbadge.io/api/VisitorHit?user=mao138&repo=gauss-esap&label=&countColor=%23007f5f" alt="contador" style="height:18px;margin-left:6px;" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <main class="card main-panel">
+        <div class="main-top">
+          <div>
+            <h2 class="section-title">Matriz actual</h2>
+            <div class="muted">La entrada resaltada en rojo indica el pivote actual de cada fila dentro de la matriz de coeficientes.</div>
+          </div>
+          <button id="pdfButton" class="pdf-btn" disabled>Descargar PDF</button>
+        </div>
+
+        <div id="statusBox" class="state-box">Estado: sin cargar</div>
+
+        <div class="matrix-stage">
+          <div id="matrixContainer"></div>
+        </div>
+
+        <div class="matrix-info-row">
+          <div class="legend"><span class="legend-dot"></span> Pivotes resaltados</div>
+          <div class="legend">La barra vertical separa la matriz de coeficientes del vector de términos independientes</div>
+        </div>
+
+        <div id="pivotInfo" class="pivot-list">Pivotes actuales: aún no disponibles.</div>
+
+        <div id="interpretationBox" class="result-box">
+          <h3>Interpretación matemática del sistema</h3>
+          <p>Carga una matriz para que la herramienta identifique automáticamente si el sistema tiene solución única, infinitas soluciones o ninguna solución, y para que señale las variables libres cuando corresponda.</p>
+        </div>
+
+        <div class="footer-note">
+          La exportación a PDF se habilita únicamente cuando el procedimiento alcanza una forma final que permite la interpretación del sistema.
+        </div>
+      </main>
+
+      <aside class="card side-panel">
+        <div class="side-sticky">
+          <div class="stack">
+            <div class="block">
+              <h3>1. Ingresar matriz</h3>
+              <p>Escribe la matriz aumentada usando comas para separar columnas y saltos de línea para separar filas. Se admiten enteros, decimales con punto y fracciones.</p>
+              <textarea id="matrixInput"></textarea>
+              <div class="actions">
+                <button id="loadBtn" class="btn primary">Cargar matriz</button>
+                <button id="exampleBtn" class="btn">Cargar ejemplo</button>
+              </div>
+              <div class="example-box">
+                Formato esperado: una fila por línea y columnas separadas por comas. Ejemplo: <code>2,1,-1,8</code>
+              </div>
+            </div>
+
+            <div class="block">
+              <h3>2. Operaciones elementales de fila</h3>
+
+              <div class="operation-card amber" style="margin-bottom:12px;">
+                <h4>Intercambio de filas</h4>
+                <div class="form-grid-2">
+                  <select id="swapR1"></select>
+                  <select id="swapR2"></select>
+                </div>
+                <div class="tag amber">Operación tipo intercambio</div>
+                <div class="actions"><button id="swapBtn" class="btn">Aplicar intercambio</button></div>
+              </div>
+
+              <div class="operation-card violet" style="margin-bottom:12px;">
+                <h4>Multiplicación por escalar</h4>
+                <div class="form-grid-2">
+                  <select id="scaleRow"></select>
+                  <input id="scaleFactor" type="text" placeholder="-1/2" />
+                </div>
+                <div class="tag violet">Operación tipo escala</div>
+                <div class="actions"><button id="scaleBtn" class="btn">Aplicar escala</button></div>
+              </div>
+
+              <div class="operation-card emerald">
+                <h4>Reemplazo por combinación lineal</h4>
+                <div class="form-grid-3">
+                  <select id="addTarget"></select>
+                  <input id="addFactor" type="text" placeholder="3/2" />
+                  <select id="addSource"></select>
+                </div>
+                <div class="tag emerald">Operación tipo combinación lineal</div>
+                <div class="actions"><button id="addBtn" class="btn">Aplicar reemplazo</button></div>
+              </div>
+
+              <div class="actions" style="margin-top:16px;">
+                <button id="undoBtn" class="btn">Deshacer</button>
+                <button id="resetBtn" class="btn rose">Reiniciar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card timeline-card" style="margin-top:20px;">
+      <div class="timeline-header">
         <div>
-          <div class="inst1">ESCUELA SUPERIOR DE ADMINISTRACIÓN PÚBLICA</div>
-          <div class="inst2">Territorial Nariño Alto Putumayo</div>
-          <div class="inst3">Elaborado por Hamilton Mauricio Ruiz, docente de planta</div>
-          <h1>Eliminación de Gauss Interactiva</h1>
-          <div style="margin-top:8px;color:var(--muted);font-size:16px;">
-            Área de Matemáticas · Programa de Administración Pública
-          </div>
-        </div>
-        <img src="logo-esap.png" alt="Símbolo ESAP" style="width:150px;height:150px;object-fit:contain;flex-shrink:0;" />
-      </div>
-
-      <p style="margin-top:16px;margin-bottom:0;">
-        Recurso didáctico para apoyar el aprendizaje del método de eliminación de Gauss en la resolución de sistemas de ecuaciones lineales mediante operaciones elementales por filas.
-      </p>
-
-      <div style="margin-top:14px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span>Visitas al sitio:</span>
-        <img src="https://api.visitorbadge.io/api/VisitorHit?user=mao138&repo=gauss-esap&label=VISITAS&countColor=%23007f5f" alt="Contador de visitas" style="height:22px;vertical-align:middle;" />
-      </div>
-    </div>
-
-    <div class="main-grid">
-      <div class="card">
-        <h2>Matriz actual</h2>
-        <div id="matrixContainer"></div>
-        <div class="status" id="statusBox">Estado: sin cargar</div>
-
-        <div id="topActions" class="inline hidden" style="margin-top:12px;">
-          <button onclick="showInputPanel()">Cambiar matriz</button>
-          <button onclick="resetAll()">Reiniciar</button>
-          <button onclick="undo()">Deshacer</button>
-        </div>
-
-        <div class="error" id="errorBox"></div>
-
-        <div id="inputPanel" style="margin-top:16px;">
-          <h2>Matriz inicial</h2>
-          <p>
-            Ingresa una matriz aumentada escribiendo <strong>cada fila en una línea diferente</strong> y usando <strong>comas para separar las columnas</strong>.
-            Para números decimales usa <strong>punto decimal</strong>, por ejemplo <code>1.5</code> o <code>-0.25</code>.
-            También puedes usar fracciones como <code>1/2</code>, <code>-3/4</code> o <code>5/2</code>.
-          </p>
-          <textarea id="matrixInput"></textarea>
-          <div class="small">
-            Ejemplo:<br>
-            <code>1,3,1</code><br>
-            <code>2,-1,9</code>
-          </div>
-          <div class="inline" style="margin-top:10px;">
-            <button onclick="loadMatrix()">Cargar matriz</button>
-            <button onclick="resetAll()">Reiniciar</button>
-            <button onclick="undo()">Deshacer</button>
-          </div>
+          <h2 class="section-title" style="margin-bottom:4px;">Historial del procedimiento</h2>
+          <div class="muted">Línea de tiempo con las operaciones realizadas y la matriz obtenida en cada paso.</div>
         </div>
       </div>
-
-      <div class="card">
-        <h2>Operaciones elementales por filas</h2>
-        <div class="ops-grid">
-          <div class="op-block">
-            <h3>1. Intercambiar filas</h3>
-            <div class="inline">
-              <button type="button">R</button>
-              <select id="swapR1"></select>
-              <span>↔</span>
-              <button type="button">R</button>
-              <select id="swapR2"></select>
-              <button onclick="swapRows()">Aplicar</button>
-            </div>
-          </div>
-
-          <div class="op-block">
-            <h3>2. Multiplicar una fila por un escalar</h3>
-            <div class="inline">
-              <button type="button">R</button>
-              <select id="scaleRow"></select>
-              <span>←</span>
-              <input type="text" id="scaleFactor" value="" />
-              <span>·</span>
-              <button type="button">R</button>
-              <span id="scaleRowText">1</span>
-              <button onclick="scaleRowOp()">Aplicar</button>
-            </div>
-            <div class="small" style="margin-top:8px;">
-              Puedes usar enteros, decimales con punto o fracciones, por ejemplo: <code>2</code>, <code>-1.5</code>, <code>1/2</code>.
-            </div>
-          </div>
-
-          <div class="op-block">
-            <h3>3. Reemplazar una fila por la suma de un múltiplo de otra</h3>
-            <div class="inline">
-              <button type="button">R</button>
-              <select id="addTarget"></select>
-              <span>←</span>
-              <button type="button">R</button>
-              <span id="addTargetText">1</span>
-              <span>+</span>
-              <input type="text" id="addFactor" value="" />
-              <span>·</span>
-              <button type="button">R</button>
-              <select id="addSource"></select>
-              <button onclick="addRows()">Aplicar</button>
-            </div>
-            <div class="small" style="margin-top:8px;">
-              Ejemplo: <code>R2 ← R2 + (1/2)·R1</code>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Pasos realizados</h2>
-      <div class="history" id="historyBox"></div>
-    </div>
+      <div id="timeline" class="timeline"></div>
+    </section>
   </div>
 
   <script>
+    const ESAP_LOGO_BASE64 = "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";
+
     let matrix = [];
     let states = [];
     let historyLog = [];
 
-    function setError(msg=''){
-      document.getElementById('errorBox').textContent = msg;
-    }
+    document.getElementById('logoEsap').src = `data:image/png;base64,${ESAP_LOGO_BASE64}`;
 
-    function gcdInt(a,b){
+    function gcdInt(a, b) {
       a = Math.abs(Math.round(a));
       b = Math.abs(Math.round(b));
-      while(b !== 0){
+      while (b !== 0) {
         const t = b;
         b = a % b;
         a = t;
@@ -433,79 +685,79 @@
       return a || 1;
     }
 
-    function reduceFrac(f){
+    function reduceFrac(f) {
       if (f.den === 0) return f;
-      if (f.num === 0) return {num:0, den:1};
-
+      if (f.num === 0) return { num: 0, den: 1 };
       let num = f.num;
       let den = f.den;
-
-      if (den < 0){
+      if (den < 0) {
         num = -num;
         den = -den;
       }
-
       const g = gcdInt(num, den);
-      return {num:num/g, den:den/g};
+      return { num: num / g, den: den / g };
     }
 
-    function makeFrac(num, den=1){
-      return reduceFrac({num, den});
+    function makeFrac(num, den = 1) {
+      return reduceFrac({ num, den });
     }
 
-    function fracAdd(a,b){
-      return reduceFrac({
-        num: a.num * b.den + b.num * a.den,
-        den: a.den * b.den
-      });
+    function fracAdd(a, b) {
+      return reduceFrac({ num: a.num * b.den + b.num * a.den, den: a.den * b.den });
     }
 
-    function fracMul(a,b){
-      return reduceFrac({
-        num: a.num * b.num,
-        den: a.den * b.den
-      });
+    function fracSub(a, b) {
+      return reduceFrac({ num: a.num * b.den - b.num * a.den, den: a.den * b.den });
     }
 
-    function fracIsZero(a){
-      return a.num === 0;
+    function fracMul(a, b) {
+      return reduceFrac({ num: a.num * b.num, den: a.den * b.den });
     }
 
-    function fracEqualsOne(a){
+    function fracDiv(a, b) {
+      if (b.num === 0) throw new Error('No se puede dividir entre cero.');
+      return reduceFrac({ num: a.num * b.den, den: a.den * b.num });
+    }
+
+    function fracIsZero(a) {
+      const r = reduceFrac(a);
+      return r.num === 0;
+    }
+
+    function fracEqualsOne(a) {
       const r = reduceFrac(a);
       return r.num === r.den;
     }
 
-    function fracToString(a){
+    function fracClone(a) {
+      return { num: a.num, den: a.den };
+    }
+
+    function fracToString(a) {
       const r = reduceFrac(a);
       return r.den === 1 ? String(r.num) : `${r.num}/${r.den}`;
     }
 
-    function parseScalarToFrac(value){
+    function parseScalarToFrac(value) {
       const s = String(value).trim().replace(',', '.');
       if (!s) throw new Error('Debes ingresar un valor.');
 
-      if (s.includes('/')){
+      if (s.includes('/')) {
         const parts = s.split('/').map(v => v.trim());
-        if (parts.length !== 2){
-          throw new Error('La fracción no tiene el formato correcto.');
-        }
-
+        if (parts.length !== 2) throw new Error('La fracción no tiene el formato correcto.');
         const num = Number(parts[0]);
         const den = Number(parts[1]);
-
-        if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0){
+        if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) {
           throw new Error('La fracción ingresada no es válida.');
         }
-
         return makeFrac(num, den);
       }
 
-      if (!Number.isFinite(Number(s))){
+      if (!Number.isFinite(Number(s))) {
         throw new Error('El valor ingresado no es válido.');
       }
 
-      if (s.includes('.')){
+      if (s.includes('.')) {
         const neg = s.startsWith('-');
         const raw = neg ? s.slice(1) : s;
         const [ent, dec] = raw.split('.');
@@ -517,171 +769,97 @@
       return makeFrac(Number(s), 1);
     }
 
-    function parseMatrix(text){
+    function parseMatrix(text) {
       const rows = text.trim().split(/\r?\n/).filter(Boolean).map(line =>
         line.split(',').map(v => parseScalarToFrac(v.trim()))
       );
 
-      if (!rows.length){
-        throw new Error('La matriz está vacía.');
-      }
+      if (!rows.length) throw new Error('La matriz está vacía.');
 
       const cols = rows[0].length;
-      if (cols < 2){
-        throw new Error('La matriz debe tener al menos dos columnas.');
-      }
+      if (cols < 2) throw new Error('La matriz debe tener al menos dos columnas.');
 
-      for (const row of rows){
-        if (row.length !== cols){
-          throw new Error('Todas las filas deben tener el mismo número de columnas.');
-        }
+      for (const row of rows) {
+        if (row.length !== cols) throw new Error('Todas las filas deben tener el mismo número de columnas.');
       }
-
       return rows;
     }
 
-    function cloneMatrix(m){
-      return m.map(row => row.map(cell => ({num:cell.num, den:cell.den})));
+    function cloneMatrix(m) {
+      return m.map(row => row.map(cell => fracClone(cell)));
     }
 
-    function refreshSelectors(){
-      const rows = matrix.length;
-      const ids = ['swapR1','swapR2','scaleRow','addTarget','addSource'];
+    function rowToString(row) {
+      return row.map(fracToString).join(', ');
+    }
 
-      ids.forEach(id=>{
+    function refreshSelectors() {
+      const rows = matrix.length;
+      const ids = ['swapR1', 'swapR2', 'scaleRow', 'addTarget', 'addSource'];
+      ids.forEach(id => {
         const sel = document.getElementById(id);
         sel.innerHTML = '';
-        for(let i=0;i<rows;i++){
+        for (let i = 0; i < rows; i++) {
           const opt = document.createElement('option');
           opt.value = i;
-          opt.textContent = i + 1;
+          opt.textContent = `Fila ${i + 1}`;
           sel.appendChild(opt);
         }
       });
-
-      if (rows > 1){
-        document.getElementById('swapR2').value = 1;
-      }
-
-      syncLabels();
+      if (rows > 1) document.getElementById('swapR2').value = 1;
     }
 
-    function syncLabels(){
-      const sr = document.getElementById('scaleRow');
-      const at = document.getElementById('addTarget');
-
-      if (sr && sr.value !== ''){
-        document.getElementById('scaleRowText').textContent = Number(sr.value) + 1;
-      }
-
-      if (at && at.value !== ''){
-        document.getElementById('addTargetText').textContent = Number(at.value) + 1;
-      }
+    function setError(msg = '') {
+      // no-op visual: the current design avoids a separate error block.
+      if (msg) alert(msg);
     }
 
-    document.addEventListener('change', (e)=>{
-      if (['scaleRow','addTarget'].includes(e.target.id)){
-        syncLabels();
-      }
-    });
+    function pushState(text, opType, opName) {
+      states.push(cloneMatrix(matrix));
+      historyLog.push({
+        text,
+        type: opType || 'neutral',
+        op: opName || 'Paso',
+        matrix: cloneMatrix(matrix)
+      });
+      render();
+    }
 
-    function loadMatrix(){
-      try{
-        setError();
+    function loadMatrix() {
+      try {
         matrix = parseMatrix(document.getElementById('matrixInput').value);
         states = [cloneMatrix(matrix)];
-        historyLog = [{text:'Matriz inicial cargada', matrix:cloneMatrix(matrix)}];
+        historyLog = [{
+          text: 'Matriz inicial cargada.',
+          type: 'neutral',
+          op: 'Inicio',
+          matrix: cloneMatrix(matrix)
+        }];
         refreshSelectors();
-        document.getElementById('inputPanel').classList.add('hidden');
-        document.getElementById('topActions').classList.remove('hidden');
         render();
-      }catch(e){
+      } catch (e) {
         setError(e.message);
       }
     }
 
-    function resetAll(){
+    function loadExample() {
+      document.getElementById('matrixInput').value = `2, 1, -1, 8
+-3, -1, 2, -11
+-2, 1, 2, -3`;
+      loadMatrix();
+    }
+
+    function resetAll() {
       matrix = [];
       states = [];
       historyLog = [];
       document.getElementById('matrixInput').value = '';
       document.getElementById('scaleFactor').value = '';
       document.getElementById('addFactor').value = '';
-      document.getElementById('historyBox').innerHTML = '';
-      document.getElementById('inputPanel').classList.remove('hidden');
-      document.getElementById('topActions').classList.add('hidden');
-      setError();
       render();
     }
 
-    function showInputPanel(){
-      document.getElementById('inputPanel').classList.remove('hidden');
-    }
-
-    function pushState(description){
-      states.push(cloneMatrix(matrix));
-      historyLog.push({text:description, matrix:cloneMatrix(matrix)});
-      render();
-    }
-
-    function swapRows(){
-      if (!matrix.length) return;
-
-      try{
-        setError();
-        const i = Number(document.getElementById('swapR1').value);
-        const j = Number(document.getElementById('swapR2').value);
-
-        if (i === j){
-          throw new Error('Debes escoger dos filas diferentes.');
-        }
-
-        [matrix[i], matrix[j]] = [matrix[j], matrix[i]];
-        pushState(`Intercambiar R${i+1} ↔ R${j+1}`);
-      }catch(e){
-        setError(e.message);
-      }
-    }
-
-    function scaleRowOp(){
-      if (!matrix.length) return;
-
-      try{
-        setError();
-        const i = Number(document.getElementById('scaleRow').value);
-        const kText = document.getElementById('scaleFactor').value;
-        const k = parseScalarToFrac(kText);
-
-        matrix[i] = matrix[i].map(x => fracMul(k, x));
-        pushState(`R${i+1} ← (${kText})·R${i+1}`);
-      }catch(e){
-        setError(e.message);
-      }
-    }
-
-    function addRows(){
-      if (!matrix.length) return;
-
-      try{
-        setError();
-        const target = Number(document.getElementById('addTarget').value);
-        const source = Number(document.getElementById('addSource').value);
-        const kText = document.getElementById('addFactor').value;
-        const k = parseScalarToFrac(kText);
-
-        const newRow = [];
-        for(let j=0;j<matrix[target].length;j++){
-          newRow.push(fracAdd(matrix[target][j], fracMul(k, matrix[source][j])));
-        }
-
-        matrix[target] = newRow;
-        pushState(`R${target+1} ← R${target+1} + (${kText})·R${source+1}`);
-      }catch(e){
-        setError(e.message);
-      }
-    }
-
-    function undo(){
+    function undo() {
       if (states.length <= 1) return;
       states.pop();
       historyLog.pop();
@@ -689,46 +867,102 @@
       render();
     }
 
-    function leadingIndex(row){
-      const lastCoefCol = row.length - 2;
-      for(let j=0;j<=lastCoefCol;j++){
-        if (!fracIsZero(row[j])){
-          return j;
+    function swapRows() {
+      if (!matrix.length) return;
+      try {
+        const i = Number(document.getElementById('swapR1').value);
+        const j = Number(document.getElementById('swapR2').value);
+        if (i === j) throw new Error('Debes escoger dos filas diferentes.');
+        [matrix[i], matrix[j]] = [matrix[j], matrix[i]];
+        pushState(`Se intercambió la fila ${i + 1} con la fila ${j + 1}.`, 'amber', 'Intercambio');
+      } catch (e) {
+        setError(e.message);
+      }
+    }
+
+    function scaleRowOp() {
+      if (!matrix.length) return;
+      try {
+        const i = Number(document.getElementById('scaleRow').value);
+        const kText = document.getElementById('scaleFactor').value;
+        const k = parseScalarToFrac(kText);
+        matrix[i] = matrix[i].map(x => fracMul(k, x));
+        pushState(`La fila ${i + 1} se multiplicó por ${kText}.`, 'violet', 'Escala');
+      } catch (e) {
+        setError(e.message);
+      }
+    }
+
+    function addRows() {
+      if (!matrix.length) return;
+      try {
+        const target = Number(document.getElementById('addTarget').value);
+        const source = Number(document.getElementById('addSource').value);
+        const kText = document.getElementById('addFactor').value;
+        const k = parseScalarToFrac(kText);
+
+        const newRow = [];
+        for (let j = 0; j < matrix[target].length; j++) {
+          newRow.push(fracAdd(matrix[target][j], fracMul(k, matrix[source][j])));
         }
+        matrix[target] = newRow;
+        pushState(`La fila ${target + 1} se reemplazó por F${target + 1} + (${kText})·F${source + 1}.`, 'emerald', 'Combinación lineal');
+      } catch (e) {
+        setError(e.message);
+      }
+    }
+
+    function leadingIndex(row) {
+      const lastCoefCol = row.length - 2;
+      for (let j = 0; j <= lastCoefCol; j++) {
+        if (!fracIsZero(row[j])) return j;
       }
       return -1;
     }
 
-    function getPivotPositions(m){
+    function getPivotPositions(m) {
+      if (!m.length) return [];
       const pivots = [];
       const lastCoefCol = m[0].length - 2;
 
-      for(let i=0;i<m.length;i++){
+      for (let i = 0; i < m.length; i++) {
         let pivotCol = -1;
-
-        for(let j=0;j<=lastCoefCol;j++){
-          if (!fracIsZero(m[i][j])){
+        for (let j = 0; j <= lastCoefCol; j++) {
+          if (!fracIsZero(m[i][j])) {
             pivotCol = j;
             break;
           }
         }
-
-        if (pivotCol !== -1 && !fracIsZero(m[i][pivotCol])){
-          pivots.push({row:i, col:pivotCol});
+        if (pivotCol !== -1) {
+          // nunca marcar cero como pivote
+          if (!fracIsZero(m[i][pivotCol])) {
+            pivots.push({ row: i, col: pivotCol });
+          }
         }
       }
-
       return pivots;
     }
 
-    function isREF(m){
+    function isZeroRowCoefficients(row) {
+      const lastCoefCol = row.length - 2;
+      for (let j = 0; j <= lastCoefCol; j++) {
+        if (!fracIsZero(row[j])) return false;
+      }
+      return true;
+    }
+
+    function isInconsistentRow(row) {
+      return isZeroRowCoefficients(row) && !fracIsZero(row[row.length - 1]);
+    }
+
+    function isREF(m) {
       let prevLead = -1;
       let zeroRowStarted = false;
 
-      for(let i=0;i<m.length;i++){
+      for (let i = 0; i < m.length; i++) {
         const lead = leadingIndex(m[i]);
 
-        if (lead === -1){
+        if (lead === -1) {
           zeroRowStarted = true;
           continue;
         }
@@ -736,43 +970,88 @@
         if (zeroRowStarted) return false;
         if (lead <= prevLead) return false;
 
-        for(let k=i+1;k<m.length;k++){
-          if (!fracIsZero(m[k][lead])){
-            return false;
-          }
+        for (let k = i + 1; k < m.length; k++) {
+          if (!fracIsZero(m[k][lead])) return false;
         }
 
         prevLead = lead;
       }
-
       return true;
     }
 
-    function isRREF(m){
+    function isRREF(m) {
       if (!isREF(m)) return false;
-
-      for(let i=0;i<m.length;i++){
+      for (let i = 0; i < m.length; i++) {
         const lead = leadingIndex(m[i]);
         if (lead === -1) continue;
-
-        if (!fracEqualsOne(m[i][lead])){
-          return false;
-        }
-
-        for(let k=0;k<m.length;k++){
-          if (k !== i && !fracIsZero(m[k][lead])){
-            return false;
-          }
+        if (!fracEqualsOne(m[i][lead])) return false;
+        for (let k = 0; k < m.length; k++) {
+          if (k !== i && !fracIsZero(m[k][lead])) return false;
         }
       }
-
       return true;
     }
 
-    function renderMatrix(containerId, m){
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
+    function getRankAndPivotCols(m) {
+      const pivotCols = [];
+      for (let i = 0; i < m.length; i++) {
+        const lead = leadingIndex(m[i]);
+        if (lead !== -1) pivotCols.push(lead);
+      }
+      return { rank: pivotCols.length, pivotCols };
+    }
 
+    function systemInterpretation(m) {
+      if (!m.length) {
+        return {
+          title: 'Interpretación matemática del sistema',
+          body: 'Carga una matriz para analizar automáticamente el tipo de solución del sistema.',
+          kind: 'neutral'
+        };
+      }
+
+      const numVars = m[0].length - 1;
+      const inconsistent = m.some(isInconsistentRow);
+      const { rank, pivotCols } = getRankAndPivotCols(m);
+
+      if (inconsistent) {
+        return {
+          title: 'Sistema sin solución',
+          body: 'La matriz presenta al menos una fila del tipo 0 = b con b distinto de 0. Por tanto, el sistema es inconsistente y no tiene solución.',
+          kind: 'danger'
+        };
+      }
+
+      if (rank === numVars) {
+        return {
+          title: 'Sistema con solución única',
+          body: 'Todas las variables quedan asociadas a un pivote en la matriz de coeficientes. El sistema tiene una única solución.',
+          kind: 'success'
+        };
+      }
+
+      const freeVars = [];
+      for (let j = 0; j < numVars; j++) {
+        if (!pivotCols.includes(j)) freeVars.push(`x${j + 1}`);
+      }
+
+      return {
+        title: 'Sistema con infinitas soluciones',
+        body: `Existen variables libres porque no todas las columnas de la matriz de coeficientes contienen pivote. Variables libres: ${freeVars.join(', ')}.`,
+        kind: 'neutral'
+      };
+    }
+
+    function getCurrentPivotsText(m) {
+      if (!m.length) return 'Pivotes actuales: aún no disponibles.';
+      const pivots = getPivotPositions(m);
+      if (!pivots.length) return 'Pivotes actuales: no hay pivotes identificables en la matriz de coeficientes.';
+      return 'Pivotes actuales: ' + pivots.map(p => `F${p.row + 1}, C${p.col + 1}`).join(' · ');
+    }
+
+    function renderMatrix(containerOrId, m, compact = false) {
+      const container = typeof containerOrId === 'string' ? document.getElementById(containerOrId) : containerOrId;
+      container.innerHTML = '';
       if (!m || !m.length) return;
 
       const wrap = document.createElement('div');
@@ -790,41 +1069,46 @@
       const pivotSet = new Set(pivots.map(p => `${p.row}-${p.col}`));
       const cellRefs = [];
 
-      for(let i=0;i<m.length;i++){
-        for(let j=0;j<m[i].length;j++){
+      for (let i = 0; i < m.length; i++) {
+        for (let j = 0; j < m[i].length; j++) {
           const cell = document.createElement('div');
           cell.className = 'matrix-cell';
+          if (compact) {
+            cell.style.fontSize = '22px';
+            cell.style.minWidth = '34px';
+          }
 
           const valueSpan = document.createElement('span');
           valueSpan.textContent = fracToString(m[i][j]);
 
-          if (
-            pivotSet.has(`${i}-${j}`) &&
-            j <= sepIndex &&
-            !fracIsZero(m[i][j])
-          ){
+          if (pivotSet.has(`${i}-${j}`) && j <= sepIndex && !fracIsZero(m[i][j])) {
             valueSpan.classList.add('pivot');
+          }
+          if (compact && valueSpan.classList.contains('pivot')) {
+            valueSpan.style.minWidth = '38px';
+            valueSpan.style.height = '38px';
+            valueSpan.style.fontSize = '20px';
+            valueSpan.style.borderWidth = '2px';
           }
 
           cell.appendChild(valueSpan);
           grid.appendChild(cell);
-          cellRefs.push({row:i, col:j, el:cell});
+          cellRefs.push({ row: i, col: j, el: cell });
         }
       }
 
       const sep = document.createElement('div');
       sep.className = 'matrix-separator';
+      if (compact) sep.style.borderLeftWidth = '3px';
       grid.appendChild(sep);
 
-      requestAnimationFrame(()=>{
+      requestAnimationFrame(() => {
         const lastCoefCells = cellRefs.filter(c => c.col === sepIndex);
         const indepCells = cellRefs.filter(c => c.col === sepIndex + 1);
-
-        if (lastCoefCells.length && indepCells.length){
+        if (lastCoefCells.length && indepCells.length) {
           const rightEdge = Math.max(...lastCoefCells.map(c => c.el.offsetLeft + c.el.offsetWidth));
           const leftEdge = Math.min(...indepCells.map(c => c.el.offsetLeft));
-          const midpoint = (rightEdge + leftEdge) / 2;
-          sep.style.left = `${midpoint}px`;
+          sep.style.left = `${(rightEdge + leftEdge) / 2}px`;
         }
       });
 
@@ -837,57 +1121,205 @@
       container.appendChild(wrap);
     }
 
-    function renderHistory(){
-      const box = document.getElementById('historyBox');
-      box.innerHTML = '';
-
-      historyLog.forEach((step, idx)=>{
-        const div = document.createElement('div');
-        div.className = 'history-step';
-
-        const title = document.createElement('div');
-        title.className = 'history-title';
-        title.textContent = `Paso ${idx}: ${step.text}`;
-        div.appendChild(title);
-
-        const matrixDiv = document.createElement('div');
-        matrixDiv.id = `hist-${idx}`;
-        div.appendChild(matrixDiv);
-
-        box.appendChild(div);
-        renderMatrix(`hist-${idx}`, step.matrix);
-      });
-    }
-
-    function renderStatus(){
+    function renderStatus() {
       const box = document.getElementById('statusBox');
-      box.classList.remove('success');
+      const headerChip = document.getElementById('headerStateChip');
+      box.className = 'state-box';
+      headerChip.className = 'chip success';
 
-      if (!matrix.length){
+      if (!matrix.length) {
         box.textContent = 'Estado: sin cargar';
+        headerChip.textContent = 'Estado: lista para operar';
+        document.getElementById('pdfButton').disabled = true;
         return;
       }
 
-      const escalonada = isREF(matrix);
-      const reducida = isRREF(matrix);
+      const ref = isREF(matrix);
+      const rref = isRREF(matrix);
+      const inconsistent = matrix.some(isInconsistentRow);
 
-      if (reducida){
-        box.textContent = 'La matriz está en forma escalonada reducida';
-        box.classList.add('success');
-      }else if (escalonada){
-        box.textContent = 'La matriz está en forma escalonada';
-        box.classList.add('success');
-      }else{
-        box.textContent = 'Estado: aún no está en forma escalonada';
+      if (rref) {
+        box.textContent = 'Estado final: la matriz está en forma escalonada reducida por filas.';
+        box.classList.add('success', 'blink');
+        headerChip.textContent = 'Estado: forma escalonada reducida';
+        document.getElementById('pdfButton').disabled = false;
+      } else if (ref) {
+        box.textContent = inconsistent
+          ? 'Estado final: la matriz está en forma escalonada y revela una inconsistencia en el sistema.'
+          : 'Estado final: la matriz está en forma escalonada. Puedes interpretar el sistema o continuar hasta la forma reducida.';
+        if (inconsistent) box.classList.add('danger'); else box.classList.add('success', 'blink');
+        headerChip.textContent = inconsistent ? 'Estado: sistema inconsistente' : 'Estado: forma escalonada';
+        document.getElementById('pdfButton').disabled = false;
+      } else {
+        box.textContent = 'Estado: la matriz aún no está en una forma final.';
+        headerChip.textContent = 'Estado: en proceso';
+        document.getElementById('pdfButton').disabled = true;
       }
     }
 
-    function render(){
-      renderMatrix('matrixContainer', matrix);
-      renderStatus();
-      renderHistory();
-      syncLabels();
+    function renderInterpretation() {
+      const box = document.getElementById('interpretationBox');
+      const data = systemInterpretation(matrix);
+      box.innerHTML = `<h3>${data.title}</h3><p>${data.body}</p>`;
+      box.style.borderColor = 'var(--border)';
+      box.style.background = '#fff';
+      if (data.kind === 'danger') {
+        box.style.borderColor = 'var(--danger-border)';
+        box.style.background = 'var(--danger-bg)';
+      } else if (data.kind === 'success') {
+        box.style.borderColor = 'var(--success-border)';
+        box.style.background = 'var(--success-bg)';
+      }
     }
+
+    function renderTimeline() {
+      const timeline = document.getElementById('timeline');
+      timeline.innerHTML = '';
+      if (!historyLog.length) {
+        const item = document.createElement('div');
+        item.className = 'timeline-item neutral';
+        item.innerHTML = '<div class="timeline-title">Aún no hay pasos registrados.</div><div class="muted">Carga una matriz y aplica operaciones para construir el procedimiento.</div>';
+        timeline.appendChild(item);
+        return;
+      }
+
+      historyLog.forEach((step, idx) => {
+        const item = document.createElement('div');
+        item.className = `timeline-item ${step.type || 'neutral'}`;
+
+        const top = document.createElement('div');
+        top.className = 'timeline-top';
+        top.innerHTML = `<div class="timeline-title">Paso ${idx}. ${step.text}</div><div class="timeline-badge">${step.op || 'Paso'}</div>`;
+        item.appendChild(top);
+
+        const matrixDiv = document.createElement('div');
+        matrixDiv.className = 'timeline-matrix';
+        item.appendChild(matrixDiv);
+
+        timeline.appendChild(item);
+        renderMatrix(matrixDiv, step.matrix, true);
+      });
+    }
+
+    function render() {
+      renderMatrix('matrixContainer', matrix, false);
+      renderStatus();
+      renderInterpretation();
+      renderTimeline();
+      document.getElementById('pivotInfo').textContent = getCurrentPivotsText(matrix);
+
+      if (!matrix.length) {
+        ['swapR1','swapR2','scaleRow','addTarget','addSource'].forEach(id => {
+          document.getElementById(id).innerHTML = '';
+        });
+      } else {
+        refreshSelectors();
+      }
+    }
+
+    function padRight(s, len) {
+      s = String(s);
+      return s.length >= len ? s : s + ' '.repeat(len - s.length);
+    }
+
+    function matrixToText(m) {
+      if (!m.length) return '';
+      const strings = m.map(row => row.map(fracToString));
+      const widths = [];
+      for (let j = 0; j < strings[0].length; j++) {
+        widths[j] = Math.max(...strings.map(r => r[j].length));
+      }
+      const sepIndex = strings[0].length - 2;
+      return strings.map(row => {
+        return row.map((v, j) => {
+          const cell = padRight(v, widths[j]);
+          return j === sepIndex ? cell + '  |  ' : cell + '  ';
+        }).join('').trimEnd();
+      }).join('\n');
+    }
+
+    async function exportPDF() {
+      if (!matrix.length || !isREF(matrix)) return;
+      try {
+        const jsPDF = window.jspdf.jsPDF;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const margin = 44;
+        let y = margin;
+
+        function newPageIfNeeded(extra) {
+          if (y + extra > pageH - margin) {
+            doc.addPage();
+            y = margin;
+          }
+        }
+
+        function writeTitle(text, size) {
+          size = size || 16;
+          newPageIfNeeded(size + 10);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(size);
+          doc.text(text, margin, y);
+          y += size + 8;
+        }
+
+        function writeBody(text, size) {
+          size = size || 11;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(size);
+          const lines = doc.splitTextToSize(text, pageW - 2 * margin);
+          newPageIfNeeded(lines.length * (size + 2) + 10);
+          doc.text(lines, margin, y);
+          y += lines.length * (size + 2) + 6;
+        }
+
+        function writeMono(text, size) {
+          size = size || 11;
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(size);
+          const lines = text.split('\n');
+          for (const line of lines) {
+            newPageIfNeeded(size + 6);
+            doc.text(line, margin, y);
+            y += size + 4;
+          }
+          y += 6;
+        }
+
+        writeTitle('Método de eliminación de Gauss-Jordan', 18);
+        writeBody('ESAP · Territorial Nariño Alto Putumayo');
+        writeBody('Elaborado por Hamilton Mauricio Ruiz, docente de planta.');
+        writeBody('Reporte generado automáticamente por el recurso educativo digital interactivo.');
+
+        const interpretation = systemInterpretation(matrix);
+        writeTitle('Estado final', 14);
+        writeBody(document.getElementById('statusBox').textContent);
+        writeBody(interpretation.title + ': ' + interpretation.body);
+
+        writeTitle('Matriz final', 14);
+        writeMono(matrixToText(matrix));
+
+        writeTitle('Procedimiento', 14);
+        historyLog.forEach((step, idx) => {
+          writeBody(`Paso ${idx} · ${step.op || 'Paso'} · ${step.text}`);
+          writeMono(matrixToText(step.matrix));
+        });
+
+        doc.save('gauss-jordan-esap.pdf');
+      } catch (e) {
+        alert('No fue posible generar el PDF en este momento.');
+      }
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', loadMatrix);
+    document.getElementById('exampleBtn').addEventListener('click', loadExample);
+    document.getElementById('swapBtn').addEventListener('click', swapRows);
+    document.getElementById('scaleBtn').addEventListener('click', scaleRowOp);
+    document.getElementById('addBtn').addEventListener('click', addRows);
+    document.getElementById('undoBtn').addEventListener('click', undo);
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+    document.getElementById('pdfButton').addEventListener('click', exportPDF);
 
     render();
   </script>
