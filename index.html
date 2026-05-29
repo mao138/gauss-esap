@@ -185,6 +185,50 @@
       transform:translateY(-1px);
     }
 
+    .btn-load{
+      background:var(--green);
+      color:#fff;
+      border:none;
+      font-weight:bold;
+    }
+
+    .btn-load:hover{
+      background:#14532d;
+    }
+
+    .btn-reset{
+      background:var(--red);
+      color:#fff;
+      border:none;
+      font-weight:bold;
+    }
+
+    .btn-reset:hover{
+      background:#991b1b;
+    }
+
+    .btn-undo{
+      background:var(--orange);
+      color:#fff;
+      border:none;
+      font-weight:bold;
+    }
+
+    .btn-undo:hover{
+      background:#9a3412;
+    }
+
+    .btn-change{
+      background:var(--blue);
+      color:#fff;
+      border:none;
+      font-weight:bold;
+    }
+
+    .btn-change:hover{
+      background:#1e40af;
+    }
+
     .pdf-btn{
       background:var(--purple);
       color:#fff;
@@ -592,9 +636,9 @@
         <div class="status" id="statusBox">Estado: sin cargar</div>
 
         <div id="topActions" class="inline hidden" style="margin-top:12px;">
-          <button onclick="showInputPanel()">Cambiar matriz</button>
-          <button onclick="resetAll()">Reiniciar</button>
-          <button onclick="undo()">Deshacer</button>
+          <button class="btn-change" onclick="showInputPanel()">Cambiar matriz</button>
+          <button class="btn-reset" onclick="resetAll()">Reiniciar</button>
+          <button class="btn-undo" onclick="undo()">Deshacer</button>
           <button class="pdf-btn" onclick="downloadPDF()">Descargar PDF</button>
         </div>
 
@@ -618,9 +662,9 @@
           </div>
 
           <div class="inline" style="margin-top:10px;">
-            <button onclick="loadMatrix()">Cargar matriz</button>
-            <button onclick="resetAll()">Reiniciar</button>
-            <button onclick="undo()">Deshacer</button>
+            <button class="btn-load" onclick="loadMatrix()">Cargar matriz</button>
+            <button class="btn-reset" onclick="resetAll()">Reiniciar</button>
+            <button class="btn-undo" onclick="undo()">Deshacer</button>
             <button class="pdf-btn" onclick="downloadPDF()">Descargar PDF</button>
           </div>
         </div>
@@ -770,7 +814,7 @@
 
     function fracEqualsOne(a){
       const r = reduceFrac(a);
-      return r.num === r.den;
+      return r.num === 1 && r.den === 1;
     }
 
     function fracToString(a){
@@ -1062,6 +1106,8 @@
     }
 
     function isREF(m){
+      if (!m || !m.length) return false;
+
       let prevLead = -1;
       let zeroRowStarted = false;
 
@@ -1089,19 +1135,22 @@
     }
 
     function isRREF(m){
+      if (!m || !m.length) return false;
       if (!isREF(m)) return false;
 
-      for(let i=0;i<m.length;i++){
-        const lead = leadingIndex(m[i]);
+      const pivots = getPivotPositions(m);
 
-        if (lead === -1) continue;
+      if (!pivots.length) return false;
 
-        if (!fracEqualsOne(m[i][lead])){
+      for(const pivot of pivots){
+        const pivotValue = m[pivot.row][pivot.col];
+
+        if (!fracEqualsOne(pivotValue)){
           return false;
         }
 
-        for(let k=0;k<m.length;k++){
-          if (k !== i && !fracIsZero(m[k][lead])){
+        for(let i=0;i<m.length;i++){
+          if (i !== pivot.row && !fracIsZero(m[i][pivot.col])){
             return false;
           }
         }
