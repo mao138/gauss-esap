@@ -13,10 +13,26 @@
       --muted:#6b7280;
       --border:#d1d5db;
       --accent:#111827;
-      --ok:#166534;
-      --okbg:#ecfdf5;
-      --okbd:#86efac;
+
+      --blue:#1d4ed8;
+      --bluebg:#eff6ff;
+      --bluebd:#93c5fd;
+
+      --green:#166534;
+      --greenbg:#ecfdf5;
+      --greenbd:#86efac;
+
+      --purple:#6d28d9;
+      --purplebg:#f5f3ff;
+      --purplebd:#c4b5fd;
+
+      --orange:#c2410c;
+      --orangebg:#fff7ed;
+      --orangebd:#fdba74;
+
       --red:#b91c1c;
+      --redbg:#fef2f2;
+      --redbd:#fecaca;
     }
 
     *{
@@ -26,7 +42,7 @@
     body{
       margin:0;
       font-family:Arial,sans-serif;
-      background:var(--bg);
+      background:linear-gradient(180deg,#f8fafc 0%,#eef2ff 100%);
       color:var(--text);
     }
 
@@ -41,7 +57,7 @@
       border:1px solid var(--border);
       border-radius:14px;
       padding:18px;
-      box-shadow:0 1px 2px rgba(0,0,0,.04);
+      box-shadow:0 2px 8px rgba(15,23,42,.06);
       margin-bottom:20px;
     }
 
@@ -79,9 +95,52 @@
       margin-top:6px;
     }
 
+    .course-line{
+      margin-top:10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:bold;
+      border:1px solid var(--border);
+    }
+
+    .tag.programa{
+      color:var(--blue);
+      background:var(--bluebg);
+      border-color:var(--bluebd);
+    }
+
+    .tag.nucleo{
+      color:var(--purple);
+      background:var(--purplebg);
+      border-color:var(--purplebd);
+    }
+
+    .tag.asignatura{
+      color:var(--green);
+      background:var(--greenbg);
+      border-color:var(--greenbd);
+    }
+
     h1{
-      margin:6px 0 8px;
-      font-size:28px;
+      margin:8px 0 8px;
+      font-size:30px;
+      color:#111827;
+    }
+
+    .subtitle{
+      margin-top:8px;
+      color:var(--blue);
+      font-size:19px;
+      font-weight:bold;
     }
 
     h2{
@@ -118,10 +177,12 @@
 
     button{
       cursor:pointer;
+      transition:.2s ease;
     }
 
     button:hover{
       background:#f3f4f6;
+      transform:translateY(-1px);
     }
 
     input[type="text"]{
@@ -149,9 +210,9 @@
     }
 
     .status.success{
-      color:var(--ok);
-      background:var(--okbg);
-      border-color:var(--okbd);
+      color:var(--green);
+      background:var(--greenbg);
+      border-color:var(--greenbd);
       animation:blinkGreen 1s step-start infinite;
     }
 
@@ -175,6 +236,7 @@
       top:16px;
       max-height:calc(100vh - 32px);
       overflow:hidden;
+      border-color:#bfdbfe;
     }
 
     .side-sticky{
@@ -183,24 +245,46 @@
       padding:20px;
       padding-right:12px;
       overscroll-behavior:contain;
+      background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
     }
 
     .side-sticky::-webkit-scrollbar{
-      width:8px;
+      width:9px;
     }
 
     .side-sticky::-webkit-scrollbar-track{
-      background:#f1f5f9;
+      background:#e5e7eb;
       border-radius:999px;
     }
 
     .side-sticky::-webkit-scrollbar-thumb{
-      background:#cbd5e1;
+      background:#60a5fa;
       border-radius:999px;
     }
 
     .side-sticky::-webkit-scrollbar-thumb:hover{
-      background:#94a3b8;
+      background:#2563eb;
+    }
+
+    .ops-title{
+      padding:12px;
+      border-radius:12px;
+      background:linear-gradient(135deg,#1d4ed8,#6d28d9);
+      color:white;
+      margin-bottom:14px;
+      text-align:center;
+      box-shadow:0 2px 6px rgba(37,99,235,.25);
+    }
+
+    .ops-title h2{
+      margin:0;
+      font-size:21px;
+    }
+
+    .ops-title .small{
+      color:#e0e7ff;
+      margin-top:4px;
+      font-size:13px;
     }
 
     .ops-grid{
@@ -211,9 +295,71 @@
 
     .op-block{
       border:1px solid var(--border);
-      border-radius:10px;
-      padding:12px;
+      border-radius:12px;
+      padding:14px;
       background:#fafafa;
+      box-shadow:0 1px 4px rgba(15,23,42,.05);
+    }
+
+    .op-swap{
+      background:var(--bluebg);
+      border-color:var(--bluebd);
+    }
+
+    .op-swap h3{
+      color:var(--blue);
+    }
+
+    .op-scale{
+      background:var(--greenbg);
+      border-color:var(--greenbd);
+    }
+
+    .op-scale h3{
+      color:var(--green);
+    }
+
+    .op-add{
+      background:var(--orangebg);
+      border-color:var(--orangebd);
+    }
+
+    .op-add h3{
+      color:var(--orange);
+    }
+
+    .op-block button:last-child{
+      font-weight:bold;
+      color:#fff;
+      border:none;
+    }
+
+    .op-swap button:last-child{
+      background:var(--blue);
+    }
+
+    .op-scale button:last-child{
+      background:var(--green);
+    }
+
+    .op-add button:last-child{
+      background:var(--orange);
+    }
+
+    .op-block button:last-child:hover{
+      filter:brightness(.95);
+    }
+
+    .mini-r{
+      font-weight:bold;
+      color:#111827;
+      background:#ffffff;
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:8px 10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
 
     .logo-box{
@@ -322,6 +468,21 @@
       display:flex;
       flex-direction:column;
       gap:12px;
+      padding-right:6px;
+    }
+
+    .history::-webkit-scrollbar{
+      width:8px;
+    }
+
+    .history::-webkit-scrollbar-track{
+      background:#e5e7eb;
+      border-radius:999px;
+    }
+
+    .history::-webkit-scrollbar-thumb{
+      background:#94a3b8;
+      border-radius:999px;
     }
 
     .history-step{
@@ -334,6 +495,7 @@
     .history-title{
       font-weight:bold;
       margin-bottom:8px;
+      color:var(--blue);
     }
 
     code{
@@ -389,12 +551,14 @@
 
           <h1>Recurso educativo digital interactivo</h1>
 
-          <div style="margin-top:8px;color:var(--muted);font-size:18px;font-weight:bold;">
+          <div class="subtitle">
             Método de eliminación de Gauss-Jordan
           </div>
 
-          <div style="margin-top:8px;color:var(--muted);font-size:16px;">
-            Área de Matemáticas · Programa de Administración Pública
+          <div class="course-line">
+            <span class="tag programa">Programa de Administración Pública Territorial</span>
+            <span class="tag nucleo">Núcleo complementario</span>
+            <span class="tag asignatura">Asignatura de Matemáticas</span>
           </div>
         </div>
 
@@ -457,33 +621,37 @@
 
       <div class="card side-panel">
         <div class="side-sticky">
-          <h2>Operaciones elementales por filas</h2>
+
+          <div class="ops-title">
+            <h2>Operaciones elementales por filas</h2>
+            <div class="small">Use la rueda del mouse para desplazarse en este panel</div>
+          </div>
 
           <div class="ops-grid">
 
-            <div class="op-block">
+            <div class="op-block op-swap">
               <h3>1. Intercambiar filas</h3>
 
               <div class="inline">
-                <button type="button">R</button>
+                <span class="mini-r">R</span>
                 <select id="swapR1"></select>
                 <span>↔</span>
-                <button type="button">R</button>
+                <span class="mini-r">R</span>
                 <select id="swapR2"></select>
                 <button onclick="swapRows()">Aplicar</button>
               </div>
             </div>
 
-            <div class="op-block">
+            <div class="op-block op-scale">
               <h3>2. Multiplicar una fila por un escalar</h3>
 
               <div class="inline">
-                <button type="button">R</button>
+                <span class="mini-r">R</span>
                 <select id="scaleRow"></select>
                 <span>←</span>
                 <input type="text" id="scaleFactor" value="" />
                 <span>·</span>
-                <button type="button">R</button>
+                <span class="mini-r">R</span>
                 <span id="scaleRowText">1</span>
                 <button onclick="scaleRowOp()">Aplicar</button>
               </div>
@@ -494,19 +662,19 @@
               </div>
             </div>
 
-            <div class="op-block">
+            <div class="op-block op-add">
               <h3>3. Reemplazar una fila por la suma de un múltiplo de otra</h3>
 
               <div class="inline">
-                <button type="button">R</button>
+                <span class="mini-r">R</span>
                 <select id="addTarget"></select>
                 <span>←</span>
-                <button type="button">R</button>
+                <span class="mini-r">R</span>
                 <span id="addTargetText">1</span>
                 <span>+</span>
                 <input type="text" id="addFactor" value="" />
                 <span>·</span>
-                <button type="button">R</button>
+                <span class="mini-r">R</span>
                 <select id="addSource"></select>
                 <button onclick="addRows()">Aplicar</button>
               </div>
