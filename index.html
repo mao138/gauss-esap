@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Eliminación de Gauss Interactiva</title>
+
   <style>
     :root{
       --bg:#f7f7fb;
@@ -18,7 +19,9 @@
       --red:#b91c1c;
     }
 
-    *{box-sizing:border-box}
+    *{
+      box-sizing:border-box;
+    }
 
     body{
       margin:0;
@@ -153,7 +156,9 @@
     }
 
     @keyframes blinkGreen{
-      50%{opacity:.45}
+      50%{
+        opacity:.45;
+      }
     }
 
     .main-grid{
@@ -163,26 +168,40 @@
       align-items:start;
     }
 
+    /* PANEL DERECHO CON SCROLL PROPIO */
     .side-panel{
-      padding:20px;
+      padding:0;
       align-self:start;
-    }
-
-    .side-sticky{
       position:sticky;
       top:16px;
       max-height:calc(100vh - 32px);
+      overflow:hidden;
+    }
+
+    .side-sticky{
+      max-height:calc(100vh - 32px);
       overflow-y:auto;
-      padding-right:4px;
+      padding:20px;
+      padding-right:12px;
+      overscroll-behavior:contain;
     }
 
     .side-sticky::-webkit-scrollbar{
       width:8px;
     }
 
+    .side-sticky::-webkit-scrollbar-track{
+      background:#f1f5f9;
+      border-radius:999px;
+    }
+
     .side-sticky::-webkit-scrollbar-thumb{
       background:#cbd5e1;
       border-radius:999px;
+    }
+
+    .side-sticky::-webkit-scrollbar-thumb:hover{
+      background:#94a3b8;
     }
 
     .ops-grid{
@@ -328,19 +347,29 @@
       .main-grid{
         grid-template-columns:1fr;
       }
+
       .tophead{
         flex-direction:column;
       }
-      .side-sticky{
+
+      .side-panel{
         position:static;
         max-height:none;
         overflow:visible;
-        padding-right:0;
+        padding:0;
       }
+
+      .side-sticky{
+        max-height:none;
+        overflow:visible;
+        padding:20px;
+      }
+
       .logo-box{
         width:150px;
         height:150px;
       }
+
       .logo-box img{
         width:132px;
         height:132px;
@@ -348,15 +377,19 @@
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
+
     <div class="card">
       <div class="tophead">
         <div>
           <div class="inst1">ESCUELA SUPERIOR DE ADMINISTRACIÓN PÚBLICA</div>
           <div class="inst2">Territorial Nariño Alto Putumayo</div>
           <div class="inst3">Elaborado por Hamilton Mauricio Ruiz, docente de planta</div>
+
           <h1>Eliminación de Gauss Interactiva</h1>
+
           <div style="margin-top:8px;color:var(--muted);font-size:16px;">
             Área de Matemáticas · Programa de Administración Pública
           </div>
@@ -378,9 +411,12 @@
     </div>
 
     <div class="main-grid">
+
       <div class="card">
         <h2>Matriz actual</h2>
+
         <div id="matrixContainer"></div>
+
         <div class="status" id="statusBox">Estado: sin cargar</div>
 
         <div id="topActions" class="inline hidden" style="margin-top:12px;">
@@ -393,17 +429,21 @@
 
         <div id="inputPanel" style="margin-top:16px;">
           <h2>Matriz inicial</h2>
+
           <p>
             Ingresa una matriz aumentada escribiendo <strong>cada fila en una línea diferente</strong> y usando <strong>comas para separar las columnas</strong>.
             Para números decimales usa <strong>punto decimal</strong>, por ejemplo <code>1.5</code> o <code>-0.25</code>.
             También puedes usar fracciones como <code>1/2</code>, <code>-3/4</code> o <code>5/2</code>.
           </p>
+
           <textarea id="matrixInput"></textarea>
+
           <div class="small">
             Ejemplo:<br>
             <code>1,3,1</code><br>
             <code>2,-1,9</code>
           </div>
+
           <div class="inline" style="margin-top:10px;">
             <button onclick="loadMatrix()">Cargar matriz</button>
             <button onclick="resetAll()">Reiniciar</button>
@@ -415,9 +455,12 @@
       <div class="card side-panel">
         <div class="side-sticky">
           <h2>Operaciones elementales por filas</h2>
+
           <div class="ops-grid">
+
             <div class="op-block">
               <h3>1. Intercambiar filas</h3>
+
               <div class="inline">
                 <button type="button">R</button>
                 <select id="swapR1"></select>
@@ -430,6 +473,7 @@
 
             <div class="op-block">
               <h3>2. Multiplicar una fila por un escalar</h3>
+
               <div class="inline">
                 <button type="button">R</button>
                 <select id="scaleRow"></select>
@@ -440,13 +484,16 @@
                 <span id="scaleRowText">1</span>
                 <button onclick="scaleRowOp()">Aplicar</button>
               </div>
+
               <div class="small" style="margin-top:8px;">
-                Puedes usar enteros, decimales con punto o fracciones, por ejemplo: <code>2</code>, <code>-1.5</code>, <code>1/2</code>.
+                Puedes usar enteros, decimales con punto o fracciones, por ejemplo:
+                <code>2</code>, <code>-1.5</code>, <code>1/2</code>.
               </div>
             </div>
 
             <div class="op-block">
               <h3>3. Reemplazar una fila por la suma de un múltiplo de otra</h3>
+
               <div class="inline">
                 <button type="button">R</button>
                 <select id="addTarget"></select>
@@ -460,19 +507,23 @@
                 <select id="addSource"></select>
                 <button onclick="addRows()">Aplicar</button>
               </div>
+
               <div class="small" style="margin-top:8px;">
                 Ejemplo: <code>R2 ← R2 + (1/2)·R1</code>
               </div>
             </div>
+
           </div>
         </div>
       </div>
+
     </div>
 
     <div class="card">
       <h2>Pasos realizados</h2>
       <div class="history" id="historyBox"></div>
     </div>
+
   </div>
 
   <script>
@@ -487,11 +538,13 @@
     function gcdInt(a,b){
       a = Math.abs(Math.round(a));
       b = Math.abs(Math.round(b));
+
       while(b !== 0){
         const t = b;
         b = a % b;
         a = t;
       }
+
       return a || 1;
     }
 
@@ -508,7 +561,10 @@
       }
 
       const g = gcdInt(num, den);
-      return {num:num/g, den:den/g};
+      return {
+        num:num/g,
+        den:den/g
+      };
     }
 
     function makeFrac(num, den=1){
@@ -545,10 +601,14 @@
 
     function parseScalarToFrac(value){
       const s = String(value).trim().replace(',', '.');
-      if (!s) throw new Error('Debes ingresar un valor.');
+
+      if (!s){
+        throw new Error('Debes ingresar un valor.');
+      }
 
       if (s.includes('/')){
         const parts = s.split('/').map(v => v.trim());
+
         if (parts.length !== 2){
           throw new Error('La fracción no tiene el formato correcto.');
         }
@@ -573,6 +633,7 @@
         const [ent, dec] = raw.split('.');
         const den = Math.pow(10, dec.length);
         const num = Number(ent) * den + Number(dec);
+
         return makeFrac(neg ? -num : num, den);
       }
 
@@ -589,6 +650,7 @@
       }
 
       const cols = rows[0].length;
+
       if (cols < 2){
         throw new Error('La matriz debe tener al menos dos columnas.');
       }
@@ -603,7 +665,10 @@
     }
 
     function cloneMatrix(m){
-      return m.map(row => row.map(cell => ({num:cell.num, den:cell.den})));
+      return m.map(row => row.map(cell => ({
+        num:cell.num,
+        den:cell.den
+      })));
     }
 
     function refreshSelectors(){
@@ -613,6 +678,7 @@
       ids.forEach(id=>{
         const sel = document.getElementById(id);
         sel.innerHTML = '';
+
         for(let i=0;i<rows;i++){
           const opt = document.createElement('option');
           opt.value = i;
@@ -650,12 +716,19 @@
     function loadMatrix(){
       try{
         setError();
+
         matrix = parseMatrix(document.getElementById('matrixInput').value);
         states = [cloneMatrix(matrix)];
-        historyLog = [{text:'Matriz inicial cargada', matrix:cloneMatrix(matrix)}];
+        historyLog = [{
+          text:'Matriz inicial cargada',
+          matrix:cloneMatrix(matrix)
+        }];
+
         refreshSelectors();
+
         document.getElementById('inputPanel').classList.add('hidden');
         document.getElementById('topActions').classList.remove('hidden');
+
         render();
       }catch(e){
         setError(e.message);
@@ -666,12 +739,15 @@
       matrix = [];
       states = [];
       historyLog = [];
+
       document.getElementById('matrixInput').value = '';
       document.getElementById('scaleFactor').value = '';
       document.getElementById('addFactor').value = '';
       document.getElementById('historyBox').innerHTML = '';
+
       document.getElementById('inputPanel').classList.remove('hidden');
       document.getElementById('topActions').classList.add('hidden');
+
       setError();
       render();
     }
@@ -682,7 +758,12 @@
 
     function pushState(description){
       states.push(cloneMatrix(matrix));
-      historyLog.push({text:description, matrix:cloneMatrix(matrix)});
+
+      historyLog.push({
+        text:description,
+        matrix:cloneMatrix(matrix)
+      });
+
       render();
     }
 
@@ -691,6 +772,7 @@
 
       try{
         setError();
+
         const i = Number(document.getElementById('swapR1').value);
         const j = Number(document.getElementById('swapR2').value);
 
@@ -699,6 +781,7 @@
         }
 
         [matrix[i], matrix[j]] = [matrix[j], matrix[i]];
+
         pushState(`Intercambiar R${i+1} ↔ R${j+1}`);
       }catch(e){
         setError(e.message);
@@ -710,11 +793,13 @@
 
       try{
         setError();
+
         const i = Number(document.getElementById('scaleRow').value);
         const kText = document.getElementById('scaleFactor').value;
         const k = parseScalarToFrac(kText);
 
         matrix[i] = matrix[i].map(x => fracMul(k, x));
+
         pushState(`R${i+1} ← (${kText})·R${i+1}`);
       }catch(e){
         setError(e.message);
@@ -726,17 +811,20 @@
 
       try{
         setError();
+
         const target = Number(document.getElementById('addTarget').value);
         const source = Number(document.getElementById('addSource').value);
         const kText = document.getElementById('addFactor').value;
         const k = parseScalarToFrac(kText);
 
         const newRow = [];
+
         for(let j=0;j<matrix[target].length;j++){
           newRow.push(fracAdd(matrix[target][j], fracMul(k, matrix[source][j])));
         }
 
         matrix[target] = newRow;
+
         pushState(`R${target+1} ← R${target+1} + (${kText})·R${source+1}`);
       }catch(e){
         setError(e.message);
@@ -745,24 +833,32 @@
 
     function undo(){
       if (states.length <= 1) return;
+
       states.pop();
       historyLog.pop();
+
       matrix = cloneMatrix(states[states.length - 1]);
+
       render();
     }
 
     function leadingIndex(row){
       const lastCoefCol = row.length - 2;
+
       for(let j=0;j<=lastCoefCol;j++){
         if (!fracIsZero(row[j])){
           return j;
         }
       }
+
       return -1;
     }
 
     function getPivotPositions(m){
       const pivots = [];
+
+      if (!m || !m.length) return pivots;
+
       const lastCoefCol = m[0].length - 2;
 
       for(let i=0;i<m.length;i++){
@@ -776,7 +872,10 @@
         }
 
         if (pivotCol !== -1 && !fracIsZero(m[i][pivotCol])){
-          pivots.push({row:i, col:pivotCol});
+          pivots.push({
+            row:i,
+            col:pivotCol
+          });
         }
       }
 
@@ -815,6 +914,7 @@
 
       for(let i=0;i<m.length;i++){
         const lead = leadingIndex(m[i]);
+
         if (lead === -1) continue;
 
         if (!fracEqualsOne(m[i][lead])){
@@ -870,7 +970,12 @@
 
           cell.appendChild(valueSpan);
           grid.appendChild(cell);
-          cellRefs.push({row:i, col:j, el:cell});
+
+          cellRefs.push({
+            row:i,
+            col:j,
+            el:cell
+          });
         }
       }
 
@@ -886,6 +991,7 @@
           const rightEdge = Math.max(...lastCoefCells.map(c => c.el.offsetLeft + c.el.offsetWidth));
           const leftEdge = Math.min(...indepCells.map(c => c.el.offsetLeft));
           const midpoint = (rightEdge + leftEdge) / 2;
+
           sep.style.left = `${midpoint}px`;
         }
       });
@@ -896,6 +1002,7 @@
       wrap.appendChild(left);
       wrap.appendChild(grid);
       wrap.appendChild(right);
+
       container.appendChild(wrap);
     }
 
@@ -910,13 +1017,15 @@
         const title = document.createElement('div');
         title.className = 'history-title';
         title.textContent = `Paso ${idx}: ${step.text}`;
+
         div.appendChild(title);
 
         const matrixDiv = document.createElement('div');
         matrixDiv.id = `hist-${idx}`;
-        div.appendChild(matrixDiv);
 
+        div.appendChild(matrixDiv);
         box.appendChild(div);
+
         renderMatrix(`hist-${idx}`, step.matrix);
       });
     }
