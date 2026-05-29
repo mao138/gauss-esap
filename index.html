@@ -784,6 +784,7 @@
       }
 
       const g = gcdInt(num, den);
+
       return {
         num:num/g,
         den:den/g
@@ -809,7 +810,8 @@
     }
 
     function fracIsZero(a){
-      return a.num === 0;
+      const r = reduceFrac(a);
+      return r.num === 0;
     }
 
     function fracEqualsOne(a){
@@ -1105,10 +1107,14 @@
       return pivots;
     }
 
-    function isREF(m){
+    function isStrictRREF(m){
       if (!m || !m.length) return false;
 
-      let prevLead = -1;
+      const pivots = getPivotPositions(m);
+
+      if (!pivots.length) return false;
+
+      let previousPivotCol = -1;
       let zeroRowStarted = false;
 
       for(let i=0;i<m.length;i++){
@@ -1119,28 +1125,16 @@
           continue;
         }
 
-        if (zeroRowStarted) return false;
-        if (lead <= prevLead) return false;
-
-        for(let k=i+1;k<m.length;k++){
-          if (!fracIsZero(m[k][lead])){
-            return false;
-          }
+        if (zeroRowStarted){
+          return false;
         }
 
-        prevLead = lead;
+        if (lead <= previousPivotCol){
+          return false;
+        }
+
+        previousPivotCol = lead;
       }
-
-      return true;
-    }
-
-    function isRREF(m){
-      if (!m || !m.length) return false;
-      if (!isREF(m)) return false;
-
-      const pivots = getPivotPositions(m);
-
-      if (!pivots.length) return false;
 
       for(const pivot of pivots){
         const pivotValue = m[pivot.row][pivot.col];
@@ -1267,17 +1261,11 @@
         return;
       }
 
-      const escalonada = isREF(matrix);
-      const reducida = isRREF(matrix);
-
-      if (reducida){
+      if (isStrictRREF(matrix)){
         box.textContent = 'La matriz está en forma escalonada reducida';
         box.classList.add('success');
-      }else if (escalonada){
-        box.textContent = 'La matriz está en forma escalonada';
-        box.classList.add('success');
       }else{
-        box.textContent = 'Estado: aún no está en forma escalonada';
+        box.textContent = 'Estado: continúe aplicando operaciones elementales por filas';
       }
     }
 
